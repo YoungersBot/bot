@@ -1,0 +1,12 @@
+reviewers:
+  # The default reviewers
+  defaults:
+    - youngers_team
+
+  groups:
+    youngers_team:
+      - AnatoliiSyrchin
+      - TimofeiN
+
+  options:
+    ignore_draft: true
