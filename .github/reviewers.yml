@@ -1,0 +1,8 @@
+reviewers:
+  # The default reviewers
+  defaults:
+    - repository-owners
+    - team:default-reviewers
+
+  options:
+    ignore_draft: true
