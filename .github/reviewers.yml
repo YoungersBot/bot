@@ -1,0 +1,11 @@
+reviewers:
+  # The default reviewers
+  defaults:
+    - AnatoliiSyrchin
+    - TimofeiN
+    - Kent1004
+    - Dilbazi1
+    - Donvik1976
+
+  options:
+    ignore_draft: true
