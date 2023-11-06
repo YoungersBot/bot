@@ -1,13 +1,21 @@
 import asyncio
+import datetime
 import logging
 import os
 import sys
 
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart
-from aiogram.types import Message
-from aiogram.utils.markdown import hbold
+from aiogram.filters import CommandStart, Command, StateFilter
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
+from aiogram.types import Message, KeyboardButton, InlineKeyboardButton, \
+    InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardMarkup
+
+from answers import answers
+from aviasales_api import AviasalesAPI
+from buttons import btns
+from destinations import dst, dct
 
 TOKEN = os.environ.get("BOT_TOKEN")
 
@@ -20,16 +28,144 @@ async def command_start_handler(message: Message) -> None:
     """
     This handler receives messages with `/start` command
     """
-    # Most event objects have aliases for API methods that can be called in events' context
-    # For example if you want to answer to incoming message you can use `message.answer(...)` alias
-    # and the target chat will be passed to :ref:`aiogram.methods.send_message.SendMessage`
-    # method automatically or call API method directly via
-    # Bot instance: `bot.send_message(chat_id=message.chat.id, ...)`
-    await message.answer(f"Hello, {hbold(message.from_user.full_name)}!")
+    kb = [
+        [
+            KeyboardButton(text=btns.subscribes),
+            KeyboardButton(text=btns.five_cheapest),
+            KeyboardButton(text=btns.weather)
+        ],
+    ]
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=kb,
+        resize_keyboard=True,
+        one_time_keyboard=False,
+    )
+
+    await message.answer(answers.start.format(
+        username=message.from_user.username),
+        reply_markup=keyboard)
+
+
+class DestinationLimit(StatesGroup):
+    choosing_destination = State()
+    choosing_limit = State()
+
+
+@dp.message(Command('help'))
+async def cmd_help(message: Message):
+    await message.answer("""Когда нибудь здесь будет описание работы бота
+пока просто перечень команд: \n
+/destination""")
+
+
+@dp.message(StateFilter(None), Command('destination'))
+async def destination(message: Message, state: FSMContext):
+    """
+    Самые дешёвые билеты по направлению
+    Первый этап. Выбор направления.
+    """
+    kb = [
+        [
+            InlineKeyboardButton(text=dst.led, callback_data='LED'),
+            InlineKeyboardButton(text=dst.aer, callback_data='AER'),
+            InlineKeyboardButton(text=dst.kzn, callback_data='KZN')
+        ],
+    ]
+    distination_kb = InlineKeyboardMarkup(inline_keyboard=kb)
+    await message.answer(
+        text=answers.destination, reply_markup=distination_kb)
+    await state.set_state(DestinationLimit.choosing_destination)
+
+
+@dp.callback_query(DestinationLimit.choosing_destination, lambda c: c.data in [
+    'LED', 'AER', 'KZN'])
+async def choose_destination(callback: CallbackQuery, state: FSMContext):
+    """Второй этап. Выбор количества рейсов"""
+    await state.update_data(destination=callback.data)
+    await callback.message.answer(text=answers.limit)
+    await state.set_state(DestinationLimit.choosing_limit)
+
+
+@dp.message(DestinationLimit.choosing_limit, lambda m: int(m.text) < 10)
+async def choose_limit(message: Message, state: FSMContext):
+    """
+    Получаем ответ от api и формируем сообщения с кнопками
+    """
+    await state.update_data(limit=message.text)
+    user_data = await state.get_data()
+    departure_date = datetime.date.today().isoformat()
+    arrival_date = (
+                datetime.date.today() + datetime.timedelta(days=30)).isoformat()
+
+    task_one_city = asyncio.create_task(AviasalesAPI.get_one_city_price(
+        AviasalesAPI.create_request_link(
+            departure_date, arrival_date, user_data['destination'],
+            user_data['limit']
+        )
+    )
+    )
+    result = await task_one_city
+    await message.answer(answers.cheapest)
+    for dest in result:
+        kb = [
+            [
+                InlineKeyboardButton(text=btns.buy, url=dest['link']),
+                InlineKeyboardButton(text=btns.subscribe,
+                                     callback_data=btns.subscribe)
+            ],
+        ]
+        inline_kb = InlineKeyboardMarkup(inline_keyboard=kb)
+
+        dest_string = answers.you_can_fly.format(destination=dct[dest[
+            'destination']], price=dest['price'])
+
+        await message.answer(dest_string, reply_markup=inline_kb)
+
+    await state.clear()
+
+
+@dp.message(DestinationLimit.choosing_limit)
+async def choose_limit(message: Message):
+
+    await message.answer(text=answers.wrong_limit)
+
+
+@dp.message(lambda message: message.text == btns.five_cheapest)
+async def five_cheapest(message: Message):
+    """
+    Пять самых дешёвых билетов из города.
+    Получаем ответ от api и формируем 5 сообщений с кнопками
+    """
+    task_get_five = asyncio.create_task(AviasalesAPI.get_five_cheapest())
+    result = await task_get_five
+    await message.answer(answers.cheapest)
+    for dest in result:
+        kb = [
+            [
+                InlineKeyboardButton(text=btns.buy, url=dest['link']),
+                InlineKeyboardButton(text=btns.subscribe,
+                                     callback_data=btns.subscribe)
+            ],
+        ]
+        inline_kb = InlineKeyboardMarkup(inline_keyboard=kb)
+
+        dest_string = answers.you_can_fly.format(destination=dest[
+            'destination'], price=dest['price'])
+
+        await message.answer(dest_string, reply_markup=inline_kb)
+
+
+@dp.callback_query(lambda c: c.data == btns.subscribe)
+async def subscribe(callback: CallbackQuery) -> None:
+    """
+    Позже будет запись подписки в базу, пока просто ответ
+
+    """
+    await callback.message.answer(answers.subscribe)
 
 
 @dp.message()
-async def echo_handler(message: types.Message) -> None:
+async def echo_handler(message: Message) -> None:
     """
     Handler will forward receive a message back to the sender
 
