@@ -6,15 +6,14 @@ from aiohttp import ClientSession
 
 
 class AviasalesAPI:
-    TOKEN = os.environ.get("AVIASALES_TOKEN")
-    TEST_CITIES = ["TBS", "IST", "DXB"]
+    TOKEN = os.environ.get('AVIASALES_TOKEN')
 
     @classmethod
     def create_request_link(cls, departure_date: str, return_date: str, destination: str, limit: str) -> str:
         return f'' \
                f'https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin=MOW&destination={destination}' \
                f'&departure_at={departure_date}&return_at={return_date}&unique=false&sorting=price&direct=false' \
-               f'&cy=rub&limit={limit}&page=1&one_way=true&token=ce9a4e4345260ca6e88fc6f6337c662d'
+               f'&cy=rub&limit={limit}&page=1&one_way=true&token={cls.TOKEN}'
 
     @classmethod
     def _parse_response(cls, api_response: dict) -> dict:
@@ -57,7 +56,7 @@ class AviasalesAPI:
                           f'departure_at={departure_date}&' \
                           f'unique=true&sorting=price&direct=false&&cy=rub' \
                           f'&limit=5&&one_way=true&' \
-                          f'token=ce9a4e4345260ca6e88fc6f6337c662d'
+                          f'token={cls.TOKEN}'
 
             async with session.get(request_url) as request:
                 response = await request.json()
@@ -80,15 +79,15 @@ class AviasalesAPI:
         return_date: str = "2023-12"  # departure + datetime.timedelta(days=30) прибавить один месяц к сегодня
         tasks = []
         for city in cities_list:
-            url = cls.create_request_link(departure_date=departure, return_date=return_date, destination=city, limit=1
+            url = cls.create_request_link(departure_date=departure, return_date=return_date, destination=city, limit='1'
                                           )
             tasks.append(asyncio.create_task(cls.get_one_city_price(url)))
         results = await asyncio.gather(*tasks)
-        print(results)
         return results
 
 
-# TEST_CITIES = ["TBS", "IST", "DXB"]
-# asyncio.run(AviasalesAPI.get_five_cheapest())
-# asyncio.run(AviasalesAPI.get_cities_prices(AviasalesAPI.TEST_CITIES))
-# asyncio.run(AviasalesAPI.get_one_city_price(AviasalesAPI.create_request_link('2023-11', '2023-12', 'DXB', '30')))
+if __name__ == '__main__':
+    TEST_CITIES = ["TBS", "IST", "DXB"]
+    asyncio.run(AviasalesAPI.get_five_cheapest())
+    asyncio.run(AviasalesAPI.get_cities_prices(TEST_CITIES))
+    asyncio.run(AviasalesAPI.get_one_city_price(AviasalesAPI.create_request_link('2023-11', '2023-12', 'DXB', '30')))

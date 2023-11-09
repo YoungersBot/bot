@@ -59,7 +59,7 @@ async def cmd_help(message: Message):
 
 
 @dp.message(StateFilter(None), Command('destination'))
-async def destination(message: Message, state: FSMContext):
+async def destination_choose_city(message: Message, state: FSMContext):
     """
     Самые дешёвые билеты по направлению
     Первый этап. Выбор направления.
@@ -77,8 +77,8 @@ async def destination(message: Message, state: FSMContext):
     await state.set_state(DestinationLimit.choosing_destination)
 
 
-@dp.callback_query(DestinationLimit.choosing_destination, lambda c: c.data in [
-    'LED', 'AER', 'KZN'])
+@dp.callback_query(DestinationLimit.choosing_destination, lambda callback:
+                   callback.data in ['LED', 'AER', 'KZN'])
 async def choose_destination(callback: CallbackQuery, state: FSMContext):
     """Второй этап. Выбор количества рейсов"""
     await state.update_data(destination=callback.data)
@@ -86,7 +86,8 @@ async def choose_destination(callback: CallbackQuery, state: FSMContext):
     await state.set_state(DestinationLimit.choosing_limit)
 
 
-@dp.message(DestinationLimit.choosing_limit, lambda m: int(m.text) < 10)
+@dp.message(DestinationLimit.choosing_limit, lambda message: int(message.text) <
+                                                             10)
 async def choose_limit(message: Message, state: FSMContext):
     """
     Получаем ответ от api и формируем сообщения с кнопками
@@ -95,16 +96,15 @@ async def choose_limit(message: Message, state: FSMContext):
     user_data = await state.get_data()
     departure_date = datetime.date.today().isoformat()
     arrival_date = (
-                datetime.date.today() + datetime.timedelta(days=30)).isoformat()
+            datetime.date.today() + datetime.timedelta(days=30)).isoformat()
 
-    task_one_city = asyncio.create_task(AviasalesAPI.get_one_city_price(
-        AviasalesAPI.create_request_link(
+    link = AviasalesAPI.create_request_link(
             departure_date, arrival_date, user_data['destination'],
             user_data['limit']
         )
-    )
-    )
+    task_one_city = asyncio.create_task(AviasalesAPI.get_one_city_price(link))
     result = await task_one_city
+
     await message.answer(answers.cheapest)
     for dest in result:
         kb = [
@@ -126,7 +126,6 @@ async def choose_limit(message: Message, state: FSMContext):
 
 @dp.message(DestinationLimit.choosing_limit)
 async def choose_limit(message: Message):
-
     await message.answer(text=answers.wrong_limit)
 
 
@@ -155,7 +154,7 @@ async def five_cheapest(message: Message):
         await message.answer(dest_string, reply_markup=inline_kb)
 
 
-@dp.callback_query(lambda c: c.data == btns.subscribe)
+@dp.callback_query(lambda callback: callback.data == btns.subscribe)
 async def subscribe(callback: CallbackQuery) -> None:
     """
     Позже будет запись подписки в базу, пока просто ответ
