@@ -1,9 +1,9 @@
 import asyncio
 import datetime
 import os
-from typing import Optional
 
 from aiohttp import ClientSession
+from typing import Optional, Union
 
 
 class AviasalesAPI:
@@ -28,6 +28,7 @@ class AviasalesAPI:
         }
 
     @classmethod
+
     def create_default_request_url(
         cls, destination: str, limit: int = 1, departure_date: str = None, return_date: str = None
     ) -> str:
