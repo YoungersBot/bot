@@ -5,7 +5,7 @@ from aiogram.types import (
     InlineKeyboardMarkup,
 )
 
-from buttons import buttons
+from .buttons import buttons
 
 
 class KeyboardBuilder:

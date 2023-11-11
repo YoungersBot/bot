@@ -16,10 +16,10 @@ from aiogram.types import (
     CallbackQuery,
 )
 
-from answers import answers
+from bot_utils.answers import answers
 from aviasales_api import AviasalesAPI
-from keyboards import KeyboardBuilder
-from buttons import buttons
+from bot_utils.keyboards import KeyboardBuilder
+from bot_utils.buttons import buttons
 from destinations import dst, dct
 
 TOKEN = os.environ.get("BOT_TOKEN")
@@ -82,7 +82,7 @@ async def choose_limit(message: Message, state: FSMContext):
     task_one_city = asyncio.create_task(AviasalesAPI.get_one_city_price(link))
     result = await task_one_city
     await message.answer(answers.cheapest)
-    results_list: list
+    results_list = []
     if isinstance(result, dict):
         results_list = [result]
     if isinstance(result, list):
