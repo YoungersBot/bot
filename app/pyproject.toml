@@ -8,6 +8,11 @@ readme = "README.md"
 [tool.black]
 line-length = 100
 
+[tool.isort]
+line_length = 100
+multi_line_output = 3
+profile = "black"
+
 [tool.poetry.dependencies]
 python = "^3.9"
 aiogram = "^3.1.1"

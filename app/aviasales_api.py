@@ -1,7 +1,8 @@
+import asyncio
 import datetime
 import os
-import asyncio
 from typing import Optional, Union
+
 from aiohttp import ClientSession
 
 

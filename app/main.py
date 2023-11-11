@@ -6,21 +6,16 @@ import sys
 
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart, Command, StateFilter
+from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import (
-    Message,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    CallbackQuery,
-)
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
-from bot_utils.answers import answers
 from aviasales_api import AviasalesAPI
-from bot_utils.keyboards import KeyboardBuilder
+from bot_utils.answers import answers
 from bot_utils.buttons import buttons
-from destinations import dst, dct
+from bot_utils.keyboards import KeyboardBuilder
+from destinations import dct, dst
 
 TOKEN = os.environ.get("BOT_TOKEN")
 dp = Dispatcher()
