@@ -5,9 +5,20 @@ description = ""
 authors = ["yongers"]
 readme = "README.md"
 
+[tool.black]
+line-length = 120
+
+[tool.isort]
+line_length = 120
+multi_line_output = 3
+profile = "black"
+
 [tool.poetry.dependencies]
 python = "^3.9"
 aiogram = "^3.1.1"
+flake8 = "^6.1.0"
+black = "^23.11.0"
+isort = "^5.12.0"
 
 
 [build-system]
