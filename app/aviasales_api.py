@@ -28,7 +28,6 @@ class AviasalesAPI:
         }
 
     @classmethod
-
     def create_default_request_url(
         cls, destination: str, limit: int = 1, departure_date: str = None, return_date: str = None
     ) -> str:
