@@ -1,9 +1,4 @@
-from aiogram.types import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    KeyboardButton,
-    ReplyKeyboardMarkup,
-)
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 
 from .buttons import buttons
 
@@ -18,9 +13,7 @@ class KeyboardBuilder:
                 KeyboardButton(text=buttons.weather),
             ],
         ]
-        return ReplyKeyboardMarkup(
-            keyboard=main_keyboard_buttons, resize_keyboard=True, one_time_keyboard=False
-        )
+        return ReplyKeyboardMarkup(keyboard=main_keyboard_buttons, resize_keyboard=True, one_time_keyboard=False)
 
     @staticmethod
     def ticket_reply_keyboard(ticket_url: str) -> InlineKeyboardMarkup:

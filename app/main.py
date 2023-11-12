@@ -1,8 +1,8 @@
 import asyncio
-import datetime
 import logging
 import os
 import sys
+from typing import Optional
 
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
@@ -31,7 +31,7 @@ async def command_start_handler(message: Message) -> None:
 
 
 @dp.message(Command("help"))
-async def command_help_handler(message: Message):
+async def command_help_handler(message: Message) -> None:
     await message.answer(answers.help_command)
 
 
@@ -49,8 +49,8 @@ async def destination_choose_city(message: Message, state: FSMContext):
             InlineKeyboardButton(text=dst.kzn, callback_data="KZN"),
         ],
     ]
-    distination_kb = InlineKeyboardMarkup(inline_keyboard=kb)
-    await message.answer(text=answers.destination, reply_markup=distination_kb)
+    destination_kb = InlineKeyboardMarkup(inline_keyboard=kb)
+    await message.answer(text=answers.destination, reply_markup=destination_kb)
     await state.set_state(DestinationLimit.choosing_destination)
 
 
@@ -65,34 +65,27 @@ async def choose_destination(callback: CallbackQuery, state: FSMContext):
 
 
 @dp.message(DestinationLimit.choosing_limit, lambda message: int(message.text) < 10)
-async def choose_limit(message: Message, state: FSMContext):
+async def choose_limit(message: Message, state: FSMContext) -> Optional[Message]:
     await state.update_data(limit=message.text)
     user_data = await state.get_data()
 
-    departure_date = (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
-    arrival_date = (datetime.date.today() + datetime.timedelta(days=30)).isoformat()
-    link = AviasalesAPI.create_request_link(
-        departure_date, arrival_date, user_data["destination"], user_data["limit"]
-    )
-    task_one_city = asyncio.create_task(AviasalesAPI.get_one_city_price(link))
+    url = AviasalesAPI.create_default_request_url(user_data["destination"], user_data["limit"])
+    task_one_city = asyncio.create_task(AviasalesAPI.get_one_city_price(request_url=url))
     result = await task_one_city
     await message.answer(answers.cheapest)
-    results_list = []
-    if isinstance(result, dict):
-        results_list = [result]
-    if isinstance(result, list):
-        results_list = result
 
-    if result:
-        for destination in results_list:
-            ticket_url = destination["link"]
-            reply_keyboard = KeyboardBuilder.ticket_reply_keyboard(ticket_url)
-            destination_string = answers.you_can_fly.format(
-                destination=dct[destination["destination"]], price=destination["price"]
-            )
-            await message.answer(destination_string, reply_markup=reply_keyboard)
-    else:
-        await message.answer(answers.no_tickets)
+    if not result:
+        await state.clear()
+        return await message.answer(answers.no_tickets)
+
+    for destination in result:
+        ticket_url = destination["link"]
+        reply_keyboard = KeyboardBuilder.ticket_reply_keyboard(ticket_url)
+        destination_string = answers.you_can_fly.format(
+            destination=dct[destination["destination"]], price=destination["price"]
+        )
+        await message.answer(destination_string, reply_markup=reply_keyboard)
+
     await state.clear()
 
 
@@ -102,16 +95,17 @@ async def wrong_limit(message: Message):
 
 
 @dp.message(lambda message: message.text == buttons.five_cheapest)
-async def five_cheapest_handler(message: Message):
-    task_get_five = asyncio.create_task(AviasalesAPI.get_five_cheapest())
+async def five_cheapest_handler(message: Message) -> None:
+    tomorrow, next_week = AviasalesAPI.get_default_dates()
+    request_url = AviasalesAPI.create_custom_request_url(departure_date=tomorrow, unique="true", limit=5)
+    task_get_five = asyncio.create_task(AviasalesAPI.get_one_city_price(request_url=request_url))
     result = await task_get_five
     await message.answer(answers.cheapest)
+
     for destination in result:
         ticket_url = destination.get("link", "")
         reply_keyboard = KeyboardBuilder.ticket_reply_keyboard(ticket_url)
-        answer_string = answers.you_can_fly.format(
-            destination=destination["destination"], price=destination["price"]
-        )
+        answer_string = answers.you_can_fly.format(destination=destination["destination"], price=destination["price"])
         await message.answer(answer_string, reply_markup=reply_keyboard)
 
 

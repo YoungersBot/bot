@@ -13,10 +13,7 @@ class Answers:
     wrong_limit: str = "Введите число от 1 до 10"
 
     start: str = "Hi, {username}!"
-    help_command: str = (
-        "Когда-нибудь здесь будет описание работы бота, пока просто перечень команд: \n"
-        "/destination"
-    )
+    help_command: str = "Когда-нибудь здесь будет описание работы бота, пока просто перечень команд: \n" "/destination"
 
 
 answers = Answers()
