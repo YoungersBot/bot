@@ -64,7 +64,7 @@ async def choose_destination(callback: CallbackQuery, state: FSMContext):
     await state.set_state(DestinationLimit.choosing_limit)
 
 
-@dp.message(DestinationLimit.choosing_limit, lambda message: int(message.text) < 10)
+@dp.message(DestinationLimit.choosing_limit, lambda message: message.text.isdecimal() and int(message.text) < 10)
 async def choose_limit(message: Message, state: FSMContext) -> Optional[Message]:
     await state.update_data(limit=message.text)
     user_data = await state.get_data()
