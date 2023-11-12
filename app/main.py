@@ -195,7 +195,6 @@ async def location(message: Message) -> None:
                                                     country=city_dict['country_cases']['su'],
                                                     airport=city_dict['main_airport_name']))
 
-
 @dp.message()
 async def echo_handler(message: Message) -> None:
     """
@@ -216,6 +215,7 @@ async def main() -> None:
     bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
     # And the run events dispatching
     await dp.start_polling(bot)
+
 
 
 if __name__ == "__main__":
