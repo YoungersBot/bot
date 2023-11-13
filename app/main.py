@@ -179,6 +179,9 @@ async def cmd_location_buttons(message: Message):
     )
 
 
+from airport_finder import airports_finder
+
+
 @dp.message(F.content_type == 'location')
 async def location(message: Message) -> None:
     user_coords = (message.location.latitude, message.location.longitude)

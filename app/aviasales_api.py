@@ -60,6 +60,17 @@ class AviasalesAPI:
             f"&cy=rub&limit={limit}&page=1&one_way={one_way}&token={cls.TOKEN}"
         )
 
+    async def get_city_with_airport_code(cls, airport_code):
+        request_url = f'http://autocomplete.travelpayouts.com/places2?' \
+                      f'term={airport_code}&' \
+                      f'locale=ru&' \
+                      f'types[]=city'
+        async with ClientSession() as session:
+            async with session.get(request_url) as request:
+                response = await request.json()
+                return response
+
+
     @classmethod
     async def get_one_city_price(cls, request_url: str) -> Optional[list]:
         async with ClientSession() as session:
