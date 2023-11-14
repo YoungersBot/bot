@@ -5,9 +5,9 @@ from geopy.distance import geodesic
 class AirportFinder:
     def __init__(self, airports_json='utils/airports.json'):
         self.json_file = airports_json
-        self.airports_coords = self.parse_airports_coords()
+        self.airports_coords = self._parse_airports_coords()
 
-    def parse_airports_coords(self):
+    def _parse_airports_coords(self):
         airports = {}
         with open(self.json_file, 'r', encoding='utf-8') as f:
             json_string = f.readline()

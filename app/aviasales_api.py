@@ -29,7 +29,7 @@ class AviasalesAPI:
 
     @classmethod
     def create_default_request_url(
-        cls, destination: str, limit: int = 1, departure_date: str = None, return_date: str = None
+            cls, destination: str, limit: int = 1, departure_date: str = None, return_date: str = None
     ) -> str:
         tomorrow, next_week = cls.get_default_dates()
         if not departure_date:
@@ -44,15 +44,15 @@ class AviasalesAPI:
 
     @classmethod
     def create_custom_request_url(
-        cls,
-        origin: str = "MOW",
-        destination: str = "",
-        departure_date: str = "",
-        return_date: str = "",
-        unique: str = "false",
-        direct: str = "false",
-        limit: int = 1,
-        one_way: str = "true",
+            cls,
+            origin: str = "MOW",
+            destination: str = "",
+            departure_date: str = "",
+            return_date: str = "",
+            unique: str = "false",
+            direct: str = "false",
+            limit: int = 1,
+            one_way: str = "true",
     ) -> str:
         return (
             f"https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin={origin}&destination={destination}"
@@ -60,6 +60,7 @@ class AviasalesAPI:
             f"&cy=rub&limit={limit}&page=1&one_way={one_way}&token={cls.TOKEN}"
         )
 
+    @classmethod
     async def get_city_with_airport_code(cls, airport_code):
         request_url = f'http://autocomplete.travelpayouts.com/places2?' \
                       f'term={airport_code}&' \
@@ -68,8 +69,11 @@ class AviasalesAPI:
         async with ClientSession() as session:
             async with session.get(request_url) as request:
                 response = await request.json()
-                return response
-
+                city_dict = response[0]
+                in_city = city_dict['cases']['pr']
+                country = city_dict['country_cases']['su']
+                airport = city_dict['main_airport_name']
+                return in_city, country, airport
 
     @classmethod
     async def get_one_city_price(cls, request_url: str) -> Optional[list]:
@@ -108,10 +112,10 @@ class AviasalesAPI:
 
 
 if __name__ == "__main__":
-
     async def check_result_coroutine():
         task = asyncio.create_task(AviasalesAPI.get_five_cheapest())
         result = await task
         print(result)
+
 
     asyncio.run(check_result_coroutine())

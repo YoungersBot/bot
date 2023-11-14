@@ -14,6 +14,7 @@ class Answers:
 
     start: str = "Hi, {username}!"
     help_command: str = "Когда-нибудь здесь будет описание работы бота, пока просто перечень команд: \n" "/destination"
+    geolocation: str = 'Вы находитесь в {in_city}, в стране {country}. Ближайший аэропорт {airport}.'
 
 
 answers = Answers()
