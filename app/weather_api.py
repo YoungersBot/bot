@@ -1,17 +1,12 @@
+import os
 import asyncio
 import datetime
-import os
-import sys
-from pprint import pprint
 
 from aiohttp import ClientSession
-from dotenv import load_dotenv
 
-# Загрузка переменных среды из файла .env
-load_dotenv()
+
 token_weather = os.environ.get("OPEN_WEATHER_TOKEN")
 
-# Словарь для соответствия кодов погоды эмодзи
 code_to_smile = {
     "Clear": "Ясно \U00002600",
     "Clouds": "Облачно \U00002601",
@@ -23,7 +18,6 @@ code_to_smile = {
 }
 
 
-# Асинхронная функция для получения информации о погоде
 async def get_weather(city, token_weather):
     try:
         async with ClientSession() as session:
@@ -32,39 +26,45 @@ async def get_weather(city, token_weather):
             ) as response:
                 data = await response.json()
 
-        pprint(data)
-
-        # Извлечение данных о погоде из JSON ответа
         city = data["name"]
         cur_weather = data["main"]["temp"]
         weather_description = data["weather"][0]["main"]
 
-        # Преобразование кода погоды в соответствующий эмодзи
         if weather_description in code_to_smile:
             wd = code_to_smile[weather_description]
         else:
-            wd = "???"
+            wd = "Ошибка/Нет данных"
 
         humidity = data["main"]["humidity"]
         pressure = data["main"]["pressure"]
         wind = data["wind"]["speed"]
 
-        # Вывод информации о погоде
-        print(
-            f"Погода на дату и время: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-            f"В городе: {city}\nТемпература: {cur_weather}C° {wd}\n"
-            f"Влажность: {humidity}%\nДавление: {pressure} мм.рт.ст\nВетер: {wind} м/с"
-        )
+        weather_info = {
+            "date_time": datetime.datetime.now().strftime('%Y-%m-%d %H:%M'),
+            "city": city,
+            "temperature": f"{cur_weather}C° {wd}",
+            "humidity": f"{humidity}%",
+            "pressure": f"{pressure} мм.рт.ст",
+            "wind_speed": f"{wind} м/с"
+        }
+
+        return weather_info
 
     except Exception as ex:
         print(ex)
-        print("Проверьте название города")
+        return None
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     city = input("Введите город: ")
-    if sys.version_info[0] == 3 and sys.version_info[1] >= 8 and sys.platform.startswith("win"):
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-        asyncio.run(get_weather(city, token_weather))
+    weather_data = asyncio.run(get_weather(city, token_weather))
+
+    if weather_data:
+        print(f"Погода на дату и время: {weather_data['date_time']}\n"
+              f"В городе: {weather_data['city']}\n"
+              f"Температура: {weather_data['temperature']}\n"
+              f"Влажность: {weather_data['humidity']}\n"
+              f"Давление: {weather_data['pressure']}\n"
+              f"Ветер: {weather_data['wind_speed']}")
     else:
-        asyncio.run(get_weather(city, token_weather))
+        print("Проверьте название города")
