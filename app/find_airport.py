@@ -3,7 +3,7 @@ from geopy.distance import geodesic
 
 
 class AirportFinder:
-    def __init__(self, airports_json='bot_utils/airports.json'):
+    def __init__(self, airports_json="bot_utils/airports.json"):
         self.json_file = airports_json
         self.airports_coords = self._parse_airports_coords()
 
@@ -40,4 +40,3 @@ if __name__ == '__main__':
     airports_json_file = 'airports.json'
     user_coords = (59.984078, 30.385342)
     print(airports_finder.find_nearest_airport(user_coords))
-
