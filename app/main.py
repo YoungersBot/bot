@@ -4,18 +4,20 @@ import os
 import sys
 from typing import Optional
 
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, F
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message, KeyboardButton
 
 from aviasales_api import AviasalesAPI
 from bot_utils.answers import answers
 from bot_utils.buttons import buttons
 from bot_utils.keyboards import KeyboardBuilder
 from destinations import dct, dst
+from find_airport import airports_finder
 
 TOKEN = os.environ.get("BOT_TOKEN")
 dp = Dispatcher()
@@ -112,6 +114,32 @@ async def five_cheapest_handler(message: Message) -> None:
 @dp.callback_query(lambda callback: callback.data == buttons.subscribe)
 async def subscribe(callback: CallbackQuery) -> None:
     await callback.message.answer(answers.subscribe)
+
+
+@dp.message(Command("location"))
+async def cmd_location_buttons(message: Message):
+    builder = ReplyKeyboardBuilder()
+
+    builder.row(
+        KeyboardButton(text="Запросить геолокацию", request_location=True),
+
+    )
+
+    await message.answer(
+        "Выберите действие:",
+        reply_markup=builder.as_markup(resize_keyboard=True),
+
+    )
+
+
+@dp.message(F.content_type == 'location')
+async def location(message: Message) -> None:
+    user_coords = (message.location.latitude, message.location.longitude)
+    nearest_airport = airports_finder.find_nearest_airport(user_coords)
+
+    response_city_info = asyncio.create_task(AviasalesAPI.get_city_with_airport_code(nearest_airport))
+    in_city, country, airport = await response_city_info
+    await message.answer(answers.geolocation.format(in_city=in_city, country=country, airport=airport))
 
 
 @dp.message()
