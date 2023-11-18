@@ -7,3 +7,15 @@ services:
       - ./app/:/home/appuser/app
     env_file:
       - ./.env
+    depends_on:
+      - bot-db
+
+  bot-db:
+    image: mysql/mysql-server:8.0
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    env_file:
+      - ./.env

@@ -18,10 +18,15 @@ $ git push origin <your_branch_name>
 
 ###
 #### DOCKER
-- $ docker-compose build  
-Собираем контейнер
-- $ docker-compose run --rm bot bash  
-заходим внутрь контейнера
+- **$ docker-compose build**  
+Собираем контейнеры.
+- **$ docker-compose up -d**  
+Запуск БД в фоновом режиме.  
+- **$ docker-compose run --rm bot bash**  
+Заходим внутрь контейнера.
+- **$ docker-compose stop**  
+Останавливаем контейнеры.
+
 
 
 ###
@@ -53,7 +58,8 @@ black и isort убрать --check для автоформата
 
 ###
 #### GIT rebase
-Если ветка develop ушла вперед пока вы делаете свою задачу:
+Если ветка develop ушла вперед пока вы делаете свою задачу  
+и возникли конфликты:
 
 - $ git commit -m '<commit_message>'  
 - $ git pull --rebase origin develop

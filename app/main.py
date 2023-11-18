@@ -9,8 +9,8 @@ from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, Message
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
-from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message, KeyboardButton
 
 from aviasales_api import AviasalesAPI
 from bot_utils.answers import answers
@@ -122,17 +122,15 @@ async def cmd_location_buttons(message: Message):
 
     builder.row(
         KeyboardButton(text="Запросить геолокацию", request_location=True),
-
     )
 
     await message.answer(
         "Выберите действие:",
         reply_markup=builder.as_markup(resize_keyboard=True),
-
     )
 
 
-@dp.message(F.content_type == 'location')
+@dp.message(F.content_type == "location")
 async def location(message: Message) -> None:
     user_coords = (message.location.latitude, message.location.longitude)
     nearest_airport = airports_finder.find_nearest_airport(user_coords)

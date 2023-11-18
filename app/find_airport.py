@@ -1,4 +1,5 @@
 import json
+
 from geopy.distance import geodesic
 
 
@@ -9,16 +10,13 @@ class AirportFinder:
 
     def _parse_airports_coords(self):
         airports = {}
-        with open(self.json_file, 'r', encoding='utf-8') as f:
+        with open(self.json_file, "r", encoding="utf-8") as f:
             json_string = f.readline()
             airports_list = json.loads(json_string)
 
         for airport in airports_list:
-            if airport['iata_type'] == 'airport':
-                airports[airport['code']] = {
-                    'lat': airport['coordinates']['lat'],
-                    'lon': airport['coordinates']['lon']
-                }
+            if airport["iata_type"] == "airport":
+                airports[airport["code"]] = {"lat": airport["coordinates"]["lat"], "lon": airport["coordinates"]["lon"]}
         return airports
 
     def find_nearest_airport(self, user_coordinates):
@@ -26,7 +24,7 @@ class AirportFinder:
         min_distance = float("inf")
 
         for airport_name, coords in self.airports_coords.items():
-            airport_coordinates = (coords['lat'], coords['lon'])
+            airport_coordinates = (coords["lat"], coords["lon"])
             distance = geodesic(user_coordinates, airport_coordinates).kilometers
             if distance < min_distance:
                 min_distance = distance
@@ -36,7 +34,7 @@ class AirportFinder:
 
 airports_finder = AirportFinder()
 
-if __name__ == '__main__':
-    airports_json_file = 'airports.json'
+if __name__ == "__main__":
+    airports_json_file = "airports.json"
     user_coords = (59.984078, 30.385342)
     print(airports_finder.find_nearest_airport(user_coords))
