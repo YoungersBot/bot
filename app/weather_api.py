@@ -1,9 +1,8 @@
-import os
 import asyncio
 import datetime
+import os
 
 from aiohttp import ClientSession
-
 
 token_weather = os.environ.get("OPEN_WEATHER_TOKEN")
 
@@ -40,12 +39,12 @@ async def get_weather(city, token_weather):
         wind = data["wind"]["speed"]
 
         weather_info = {
-            "date_time": datetime.datetime.now().strftime('%Y-%m-%d %H:%M'),
+            "date_time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
             "city": city,
             "temperature": f"{cur_weather}C° {wd}",
             "humidity": f"{humidity}%",
             "pressure": f"{pressure} мм.рт.ст",
-            "wind_speed": f"{wind} м/с"
+            "wind_speed": f"{wind} м/с",
         }
 
         return weather_info
@@ -55,16 +54,18 @@ async def get_weather(city, token_weather):
         return None
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     city = input("Введите город: ")
     weather_data = asyncio.run(get_weather(city, token_weather))
 
     if weather_data:
-        print(f"Погода на дату и время: {weather_data['date_time']}\n"
-              f"В городе: {weather_data['city']}\n"
-              f"Температура: {weather_data['temperature']}\n"
-              f"Влажность: {weather_data['humidity']}\n"
-              f"Давление: {weather_data['pressure']}\n"
-              f"Ветер: {weather_data['wind_speed']}")
+        print(
+            f"Погода на дату и время: {weather_data['date_time']}\n"
+            f"В городе: {weather_data['city']}\n"
+            f"Температура: {weather_data['temperature']}\n"
+            f"Влажность: {weather_data['humidity']}\n"
+            f"Давление: {weather_data['pressure']}\n"
+            f"Ветер: {weather_data['wind_speed']}"
+        )
     else:
         print("Проверьте название города")

@@ -97,17 +97,16 @@ class AviasalesAPI:
 
     @classmethod
     async def get_city_with_airport_code(cls, airport_code):
-        request_url = f'http://autocomplete.travelpayouts.com/places2?' \
-                      f'term={airport_code}&' \
-                      f'locale=ru&' \
-                      f'types[]=city'
+        request_url = (
+            f"http://autocomplete.travelpayouts.com/places2?" f"term={airport_code}&" f"locale=ru&" f"types[]=city"
+        )
         async with ClientSession() as session:
             async with session.get(request_url) as request:
                 response = await request.json()
                 city_dict = response[0]
-                in_city = city_dict['cases']['pr']
-                country = city_dict['country_cases']['su']
-                airport = city_dict['main_airport_name']
+                in_city = city_dict["cases"]["pr"]
+                country = city_dict["country_cases"]["su"]
+                airport = city_dict["main_airport_name"]
                 return in_city, country, airport
 
 
