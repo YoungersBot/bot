@@ -14,7 +14,9 @@ from weather_api import WeatherApi
 
 router = Router()
 
-my_coor = []
+
+class UserObject:
+    user_coordinates: tuple = None
 
 
 class WeatherState(StatesGroup):
@@ -23,11 +25,8 @@ class WeatherState(StatesGroup):
 
 @router.message(F.content_type == "location")
 async def location(message: Message) -> None:
-    my_coor.append(message.location.latitude)
-    my_coor.append(message.location.longitude)
-    user_coords = (message.location.latitude, message.location.longitude)
-    print(user_coords)
-    nearest_airport = airports_finder.find_nearest_airport(user_coords)
+    UserObject.user_coordinates = (message.location.latitude, message.location.longitude)
+    nearest_airport = airports_finder.find_nearest_airport(UserObject.user_coordinates)
 
     response_city_info = asyncio.create_task(AviasalesAPI.get_city_with_airport_code(nearest_airport))
     in_city, country, airport = await response_city_info
@@ -45,7 +44,8 @@ async def weather_in_your_city_handler(message: Message) -> None:
 
 @router.message(lambda message: message.text == buttons.weather_in_your_city)
 async def your_city(message: Message):
-    weather_your_city = WeatherApi.get_weather_with_coor(my_coor[0], my_coor[1])
+    weather_your_city = asyncio.create_task(
+        WeatherApi.get_weather_with_coor(UserObject.user_coordinates[0], UserObject.user_coordinates[1]))
     result = await weather_your_city
     await message.reply(answers.weather_in_your_city.format(result=result))
 
@@ -58,7 +58,7 @@ async def any_city(message: Message, state: FSMContext) -> None:
 
 @router.message(WeatherState.any_city_state)
 async def weather_any_city(message: Message, state: FSMContext) -> None:
-    weather_response = WeatherApi.get_weather(message.text)
+    weather_response = asyncio.create_task(WeatherApi.get_weather(message.text))
     result = await weather_response
     await message.reply(answers.weather_in_any_city.format(result=result))
     await state.clear()

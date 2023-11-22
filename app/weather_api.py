@@ -36,8 +36,8 @@ class WeatherApi:
     async def get_weather_with_coor(cls, lat, lon):
         async with ClientSession() as session:
             async with session.get(
-                f"https://api.openweathermap.org/data/2.5/weather?lat="
-                f"{lat}&lon={lon}&appid={cls.TOKEN}&units=metric&lang=ru"
+                    f"https://api.openweathermap.org/data/2.5/weather?lat="
+                    f"{lat}&lon={lon}&appid={cls.TOKEN}&units=metric&lang=ru"
             ) as response:
                 data = await response.json()
                 if len(data) <= 2:
@@ -48,11 +48,11 @@ class WeatherApi:
     async def get_weather(cls, city):
         async with ClientSession() as session:
             async with session.get(
-                f"https://api.openweathermap.org/data/2.5/weather?" f"q={city}&appid={cls.TOKEN}&units=metric&lang=ru"
+                    f"https://api.openweathermap.org/data/2.5/weather?" f"q={city}&appid={cls.TOKEN}&units=metric&lang=ru"
             ) as response:
                 data = await response.json()
                 if len(data) <= 2:
-                    return "Введите название города правильно!!!"
+                    return f"Для города {city} нет данных. Проверьте название или введите другой город."
                 return cls._parse_response(data)
 
 
