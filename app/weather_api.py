@@ -4,68 +4,61 @@ import os
 
 from aiohttp import ClientSession
 
-token_weather = os.environ.get("OPEN_WEATHER_TOKEN")
 
-code_to_smile = {
-    "Clear": "Ясно \U00002600",
-    "Clouds": "Облачно \U00002601",
-    "Rain": "Дождь \U00002614",
-    "Drizzle": "Дождь \U00002614",
-    "Thunderstorm": "Гроза \U000026A1",
-    "Snow": "Снег \U0001F328",
-    "Mist": "Туман \U0001F32B",
-}
+class WeatherApi:
+    TOKEN = os.environ.get("OPEN_WEATHER_TOKEN")
 
+    weather_icon = {
+        "Clear": "\U00002600",
+        "Clouds": "\U00002601",
+        "Rain": "\U00002614",
+        "Drizzle": "\U00002614",
+        "Thunderstorm": "\U000026A1",
+        "Snow": "\U0001F328",
+        "Mist": "\U0001F32B",
+    }
 
-async def get_weather(city, token_weather):
-    try:
+    @classmethod
+    def _parse_response(cls, response: dict) -> dict:
+        return (
+            f"Погода в городе "
+            f'{response["name"].capitalize()}:\n'
+            f'{response["weather"][0]["description"].capitalize()}'
+            f'{cls.weather_icon[response["weather"][0]["main"]]} \n'
+            f'Температура: {response["main"]["temp"]}C°\n'
+            f'Ощущается как: {response["main"]["feels_like"]}C°\n'
+            f'Влажность: {response["main"]["humidity"]}%\n'
+            f'Давление: {response["main"]["pressure"]}мм.рт.ст\n'
+            f'Ветер: {response["wind"]["speed"]}м/с'
+        )
+
+    @classmethod
+    async def get_weather_with_coor(cls, lat, lon):
         async with ClientSession() as session:
             async with session.get(
-                f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={token_weather}&units=metric"
+                    f"https://api.openweathermap.org/data/2.5/weather?lat="
+                    f"{lat}&lon={lon}&appid={cls.TOKEN}&units=metric&lang=ru"
             ) as response:
                 data = await response.json()
+                if len(data) <= 2:
+                    return None
+                return cls._parse_response(data)
 
-        city = data["name"]
-        cur_weather = data["main"]["temp"]
-        weather_description = data["weather"][0]["main"]
-
-        if weather_description in code_to_smile:
-            wd = code_to_smile[weather_description]
-        else:
-            wd = "Ошибка/Нет данных"
-
-        humidity = data["main"]["humidity"]
-        pressure = data["main"]["pressure"]
-        wind = data["wind"]["speed"]
-
-        weather_info = {
-            "date_time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "city": city,
-            "temperature": f"{cur_weather}C° {wd}",
-            "humidity": f"{humidity}%",
-            "pressure": f"{pressure} мм.рт.ст",
-            "wind_speed": f"{wind} м/с",
-        }
-
-        return weather_info
-
-    except Exception as ex:
-        print(ex)
-        return None
+    @classmethod
+    async def get_weather(cls, city):
+        async with ClientSession() as session:
+            async with session.get(
+                    f"https://api.openweathermap.org/data/2.5/weather?" f"q={city}&appid={cls.TOKEN}&units=metric&lang=ru"
+            ) as response:
+                data = await response.json()
+                if len(data) <= 2:
+                    return f"Для города {city} нет данных. Проверьте название или введите другой город."
+                return cls._parse_response(data)
 
 
 if __name__ == "__main__":
     city = input("Введите город: ")
-    weather_data = asyncio.run(get_weather(city, token_weather))
-
-    if weather_data:
-        print(
-            f"Погода на дату и время: {weather_data['date_time']}\n"
-            f"В городе: {weather_data['city']}\n"
-            f"Температура: {weather_data['temperature']}\n"
-            f"Влажность: {weather_data['humidity']}\n"
-            f"Давление: {weather_data['pressure']}\n"
-            f"Ветер: {weather_data['wind_speed']}"
-        )
-    else:
-        print("Проверьте название города")
+    weather_data = asyncio.run(WeatherApi.get_weather(city))
+    weather_data1 = asyncio.run(WeatherApi.get_weather_with_coor(62.266154, 74.478042))
+    print(weather_data1)
+    print(weather_data)

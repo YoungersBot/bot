@@ -4,7 +4,7 @@ import os
 import sys
 from typing import Optional
 
-from aiogram import Bot, Dispatcher, F
+from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -12,12 +12,12 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, Message
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
+import weather_service
 from aviasales_api import AviasalesAPI
 from bot_utils.answers import answers
 from bot_utils.buttons import buttons
 from bot_utils.keyboards import KeyboardBuilder
 from destinations import dct, dst
-from find_airport import airports_finder
 
 TOKEN = os.environ.get("BOT_TOKEN")
 dp = Dispatcher()
@@ -130,27 +130,9 @@ async def cmd_location_buttons(message: Message):
     )
 
 
-@dp.message(F.content_type == "location")
-async def location(message: Message) -> None:
-    user_coords = (message.location.latitude, message.location.longitude)
-    nearest_airport = airports_finder.find_nearest_airport(user_coords)
-
-    response_city_info = asyncio.create_task(AviasalesAPI.get_city_with_airport_code(nearest_airport))
-    in_city, country, airport = await response_city_info
-    await message.answer(answers.geolocation.format(in_city=in_city, country=country, airport=airport))
-
-
-@dp.message()
-async def echo_handler(message: Message) -> None:
-    main_keyboard = KeyboardBuilder.main_reply_keyboard()
-    try:
-        await message.send_copy(chat_id=message.chat.id, reply_markup=main_keyboard)
-    except TypeError:
-        await message.answer("Nice try!")
-
-
 async def main() -> None:
     bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
+    dp.include_router(weather_service.router)
     await dp.start_polling(bot)
 
 
