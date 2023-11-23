@@ -9,7 +9,8 @@ from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, Message
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, Message, \
+    ReplyKeyboardMarkup
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 import weather_service
@@ -18,9 +19,19 @@ from bot_utils.answers import answers
 from bot_utils.buttons import buttons
 from bot_utils.keyboards import KeyboardBuilder
 from destinations import dct, dst
+from weather_api import WeatherApi
 
 TOKEN = os.environ.get("BOT_TOKEN")
 dp = Dispatcher()
+
+cities_where_the_season = ['AUH', 'SSA', 'BZC', 'SCU', 'TND', 'UPB', 'VRA', 'PQC', 'PHH', 'CSJ', 'CEB', 'TAG', 'KCI',
+                           'DXB', 'SHJ', 'FJR', 'GOI',
+                           'PYX', 'CNX', 'HHQ', 'TRV', 'SYX', 'REC']
+cities = {'AUH': 'Абу-Даби', 'SSA': 'Сальвадор', 'BZC': 'Бузиос', 'SCU': 'Сантьяго-де-Куба', 'TND': 'Тринидад',
+          'UPB': 'Гавана', 'VRA': 'Варадеро', 'PQC': 'Фукуок', 'PHH': 'Фантхьет',
+          'CSJ': 'Вунгтау', 'CEB': 'Себу', 'TAG': 'Бохол', 'KCI': 'Корон', 'DXB': 'Дубай', 'SHJ': 'Шарджа',
+          'FJR': 'Фуджейра', 'GOI': 'Гоа', 'PYX': 'Паттайя', 'CNX': 'Ко Чанг',
+          'HHQ': 'Районг', 'TRV': 'Хуахин', 'SYX': 'остров Хайнань', 'REC': 'Ресифи', }
 
 
 @dp.message(CommandStart())
@@ -106,6 +117,8 @@ async def five_cheapest_handler(message: Message) -> None:
 
     for destination in result:
         ticket_url = destination.get("link", "")
+        print(cities[destination["destination"]])
+
         reply_keyboard = KeyboardBuilder.ticket_reply_keyboard(ticket_url)
         answer_string = answers.you_can_fly.format(destination=destination["destination"], price=destination["price"])
         await message.answer(answer_string, reply_markup=reply_keyboard)
@@ -114,6 +127,49 @@ async def five_cheapest_handler(message: Message) -> None:
 @dp.callback_query(lambda callback: callback.data == buttons.subscribe)
 async def subscribe(callback: CallbackQuery) -> None:
     await callback.message.answer(answers.subscribe)
+
+
+@dp.message(Command("season"))
+async def command_season(message: Message):
+    kb = [
+        [KeyboardButton(text=buttons.season)],
+    ]
+    keyboard = ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+    await message.answer(answers.actions, reply_markup=keyboard)
+
+
+#
+
+
+
+@dp.message(lambda message: message.text == buttons.season)
+async def season_handler(message: Message) -> None:
+    ticket_list = []
+    for city in cities_where_the_season:
+        tomorrow, next_week = AviasalesAPI.get_default_dates()
+        request_url = AviasalesAPI.create_custom_request_url(destination=city, departure_date=tomorrow, unique="true",
+                                                             limit=1)
+
+        response = asyncio.create_task(AviasalesAPI.get_one_city_price(request_url=request_url))
+        result = await response
+        if result:
+            ticket_list.append(result)
+        if len(ticket_list) == 5:
+            break
+
+    await message.answer(answers.season)
+    for ticket in ticket_list:
+        destination = ticket[0]
+        ticket_url = destination.get("link", "")
+        weather_city = asyncio.create_task(WeatherApi.get_weather(cities[destination["destination"]]))
+        result = await weather_city
+        print("des",destination)
+        print("res",result)
+        reply_keyboard = KeyboardBuilder.ticket_reply_keyboard(ticket_url)
+        answer_string = answers.season_weather.format(destination=destination["destination"],
+                                                   price=destination["price"],result=result)
+
+        await message.answer(answer_string, reply_markup=reply_keyboard)
 
 
 @dp.message(Command("location"))

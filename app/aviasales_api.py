@@ -13,9 +13,15 @@ class AviasalesAPI:
     @classmethod
     def get_default_dates(cls) -> tuple[str, str]:
         tomorrow_date = datetime.date.today() + datetime.timedelta(days=1)
-        next_week_date = tomorrow_date + datetime.timedelta(days=8)
+        days = 30 - datetime.date.today().day
+        if tomorrow_date.day > 20:
+            time_interval = datetime.date.today() + datetime.timedelta(days + 30)
+        else:
+            time_interval = datetime.date.today() + datetime.timedelta(days)
+
         tomorrow = tomorrow_date.isoformat()
-        next_week = next_week_date.isoformat()
+        next_week = time_interval.isoformat()
+
         return tomorrow, next_week
 
     @classmethod

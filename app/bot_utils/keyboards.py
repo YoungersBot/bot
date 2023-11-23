@@ -11,6 +11,7 @@ class KeyboardBuilder:
                 KeyboardButton(text=buttons.subscribes),
                 KeyboardButton(text=buttons.five_cheapest),
                 KeyboardButton(text=buttons.weather),
+                KeyboardButton(text=buttons.season),
             ],
         ]
         return ReplyKeyboardMarkup(keyboard=main_keyboard_buttons, resize_keyboard=True, one_time_keyboard=False)
@@ -21,6 +22,7 @@ class KeyboardBuilder:
             [
                 InlineKeyboardButton(text=buttons.buy, url=ticket_url),
                 InlineKeyboardButton(text=buttons.subscribe, callback_data=buttons.subscribe),
+
             ],
         ]
         return InlineKeyboardMarkup(inline_keyboard=ticket_keyboard_buttons)
