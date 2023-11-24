@@ -211,8 +211,6 @@ async def season_handler(message: Message) -> None:
         ticket_url = destination.get("link", "")
         weather_city = asyncio.create_task(WeatherApi.get_weather(cities[destination["destination"]]))
         result = await weather_city
-        print("des", destination)
-        print("res", result)
         reply_keyboard = KeyboardBuilder.ticket_reply_keyboard(ticket_url)
         answer_string = answers.season_weather.format(
             destination=destination["destination"], price=destination["price"], result=result
