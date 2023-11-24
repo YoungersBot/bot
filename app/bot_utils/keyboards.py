@@ -22,7 +22,6 @@ class KeyboardBuilder:
             [
                 InlineKeyboardButton(text=buttons.buy, url=ticket_url),
                 InlineKeyboardButton(text=buttons.subscribe, callback_data=buttons.subscribe),
-
             ],
         ]
         return InlineKeyboardMarkup(inline_keyboard=ticket_keyboard_buttons)

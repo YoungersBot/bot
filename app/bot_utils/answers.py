@@ -20,7 +20,7 @@ class Answers:
     weather_in_any_city: str = "{result}."
     actions: str = "Выберите действие:"
     season: str = "Mожно улететь в летний сезон:"
-    season_weather: str =  "Вы можете улететь в {destination} за {price} {result}."
+    season_weather: str = "Вы можете улететь в {destination} за {price} {result}."
 
 
 answers = Answers()

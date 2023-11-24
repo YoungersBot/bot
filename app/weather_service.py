@@ -45,7 +45,8 @@ async def weather_in_your_city_handler(message: Message) -> None:
 @router.message(lambda message: message.text == buttons.weather_in_your_city)
 async def your_city(message: Message):
     weather_your_city = asyncio.create_task(
-        WeatherApi.get_weather_with_coor(UserObject.user_coordinates[0], UserObject.user_coordinates[1]))
+        WeatherApi.get_weather_with_coor(UserObject.user_coordinates[0], UserObject.user_coordinates[1])
+    )
     result = await weather_your_city
     await message.reply(answers.weather_in_your_city.format(result=result))
 
