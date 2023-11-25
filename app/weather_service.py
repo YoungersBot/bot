@@ -9,7 +9,7 @@ from aviasales_api import AviasalesAPI
 from bot_utils.answers import answers
 from bot_utils.buttons import buttons
 from bot_utils.keyboards import KeyboardBuilder
-from find_airport import airports_finder
+from find_airport import AirportFinder
 from weather_api import WeatherApi
 
 router = Router()
@@ -26,11 +26,11 @@ class WeatherState(StatesGroup):
 @router.message(F.content_type == "location")
 async def location(message: Message) -> None:
     UserObject.user_coordinates = (message.location.latitude, message.location.longitude)
-    nearest_airport = airports_finder.find_nearest_airport(UserObject.user_coordinates)
+    airport_name, city_code = await asyncio.create_task(AirportFinder.find_nearest_airport(UserObject.user_coordinates))
 
-    response_city_info = asyncio.create_task(AviasalesAPI.get_city_with_airport_code(nearest_airport))
-    in_city, country, airport = await response_city_info
-    await message.answer(answers.geolocation.format(in_city=in_city, country=country, airport=airport))
+    response_city_info = asyncio.create_task(AviasalesAPI.get_city_names_with_code(city_code))
+    in_city, country = await response_city_info
+    await message.answer(answers.location.format(in_city=in_city, country=country, airport=airport_name))
 
 
 @router.message(lambda message: message.text == buttons.weather)

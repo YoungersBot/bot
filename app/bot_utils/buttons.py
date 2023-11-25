@@ -11,6 +11,8 @@ class ButtonsText:
     weather: str = "Погода"
     weather_in_your_city: str = "Погода в твоем городе"
     weather_in_any_city: str = "Погода в любом городе"
+    location: str = "Запрос геолокации"
+
 
 
 buttons = ButtonsText()

@@ -12,9 +12,20 @@ class Answers:
     limit: str = "Сколько результатов поиска показать?\n От 1 до 10."
     wrong_limit: str = "Введите число от 1 до 10"
 
-    start: str = "Hi, {username}!"
+    start: str = "Здравствуйте, {username}"
+    city_or_location: str = "Напишите название города из которого Вы хотели бы вылетать или предоставьте доступ к " \
+                            "геолокации и мы найдём ближайший аэропорт."
     help_command: str = "Когда-нибудь здесь будет описание работы бота, пока просто перечень команд: \n" "/destination"
-    geolocation: str = "Вы находитесь в {in_city}, в стране {country}. Ближайший аэропорт {airport}."
+
+    location: str = "Ближайший к Вам аэропорт - {airport} в {in_city} ({country})."
+    location_many: str = "Ближайший к Вам аэропорт - {airport} в {in_city} ({country}).\n" \
+                         "В этом городе ещё есть аэропорты: {airports}"
+    enter_city: str = "Введите название города или нажмите кнопку \"Запрос геолокации\""
+    city_with_airport_not_found: str = "Такой город с аэропортом не найден."
+    city_found = "В качестве города отправления выбран {city_name} c аэропортом {airport_name}"
+    cities_found = "В качестве города отправления выбран {city_name} c аэропортами {airports_names}"
+    two_cities = "Найдено два города с таким названием"
+
     weather: str = "Введите город:"
     weather_in_your_city: str = "{result}."
     weather_in_any_city: str = "{result}."
