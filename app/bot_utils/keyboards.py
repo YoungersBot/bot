@@ -11,6 +11,7 @@ class KeyboardBuilder:
                 KeyboardButton(text=buttons.subscribes),
                 KeyboardButton(text=buttons.five_cheapest),
                 KeyboardButton(text=buttons.weather),
+                KeyboardButton(text=buttons.season),
             ],
         ]
         return ReplyKeyboardMarkup(keyboard=main_keyboard_buttons, resize_keyboard=True, one_time_keyboard=False)
