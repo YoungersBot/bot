@@ -157,16 +157,14 @@ async def wrong_limit(message: Message):
 
 @dp.message(lambda message: message.text == buttons.five_cheapest)
 async def five_cheapest_handler(message: Message) -> None:
-    tomorrow, next_week = AviasalesAPI.get_default_dates()
-    request_url = AviasalesAPI.create_custom_request_url(departure_date=tomorrow, unique="true", limit=5)
+    default_date = AviasalesAPI.get_default_dates()
+    request_url = AviasalesAPI.create_custom_request_url(departure_date=default_date, unique="true", limit=5)
     task_get_five = asyncio.create_task(AviasalesAPI.get_one_city_price(request_url=request_url))
     result = await task_get_five
     await message.answer(answers.cheapest)
 
     for destination in result:
         ticket_url = destination.get("link", "")
-        print(cities[destination["destination"]])
-
         reply_keyboard = KeyboardBuilder.ticket_reply_keyboard(ticket_url)
         answer_string = answers.you_can_fly.format(destination=destination["destination"], price=destination["price"])
         await message.answer(answer_string, reply_markup=reply_keyboard)
@@ -193,9 +191,9 @@ async def command_season(message: Message):
 async def season_handler(message: Message) -> None:
     ticket_list = []
     for city in cities_where_the_season:
-        tomorrow, next_week = AviasalesAPI.get_default_dates()
+        default_date = AviasalesAPI.get_default_dates()
         request_url = AviasalesAPI.create_custom_request_url(
-            destination=city, departure_date=tomorrow, unique="true", limit=1
+            destination=city, departure_date=default_date, unique="true", limit=1
         )
 
         response = asyncio.create_task(AviasalesAPI.get_one_city_price(request_url=request_url))

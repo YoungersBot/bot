@@ -11,18 +11,19 @@ class AviasalesAPI:
     TEST_CITIES = ["HRG", "VRA", "DXB"]
 
     @classmethod
-    def get_default_dates(cls) -> tuple[str, str]:
-        tomorrow_date = datetime.date.today() + datetime.timedelta(days=1)
-        days = 30 - datetime.date.today().day
-        if tomorrow_date.day > 20:
-            time_interval = datetime.date.today() + datetime.timedelta(days + 30)
+    def get_default_dates(cls) -> tuple[str]:
+        this_date = datetime.date.today()
+
+        if this_date.day < 20:
+            return this_date.strftime("%Y-%m")
+        if this_date.month == 12:
+            next_month = 1
         else:
-            time_interval = datetime.date.today() + datetime.timedelta(days)
+            next_month = this_date.month + 1
 
-        tomorrow = tomorrow_date.isoformat()
-        next_week = time_interval.isoformat()
+        next_month_date = this_date.replace(day=1, month=next_month)
 
-        return tomorrow, next_week
+        return next_month_date.strftime("%Y-%m")
 
     @classmethod
     def _parse_response(cls, api_response: dict) -> dict:
@@ -34,17 +35,14 @@ class AviasalesAPI:
         }
 
     @classmethod
-    def create_default_request_url(
-        cls, destination: str, limit: int = 1, departure_date: str = None, return_date: str = None
-    ) -> str:
-        tomorrow, next_week = cls.get_default_dates()
+    def create_default_request_url(cls, destination: str, limit: int = 1, departure_date: str = None) -> str:
+        month = cls.get_default_dates()
         if not departure_date:
-            departure_date = tomorrow
-        if not return_date:
-            return_date = next_week
+            departure_date = month
+
         return (
             f"https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin=MOW&destination={destination}"
-            f"&departure_at={departure_date}&return_at={return_date}&unique=false&sorting=price&direct=false"
+            f"&departure_at={departure_date}&unique=false&sorting=price&direct=false"
             f"&cy=rub&limit={limit}&page=1&one_way=true&token={cls.TOKEN}"
         )
 
@@ -60,6 +58,11 @@ class AviasalesAPI:
         limit: int = 1,
         one_way: str = "true",
     ) -> str:
+        print(
+            f"https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin={origin}&destination={destination}"
+            f"&departure_at={departure_date}&return_at={return_date}&unique={unique}&sorting=price&direct={direct}"
+            f"&cy=rub&limit={limit}&page=1&one_way={one_way}&token={cls.TOKEN}"
+        )
         return (
             f"https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin={origin}&destination={destination}"
             f"&departure_at={departure_date}&return_at={return_date}&unique={unique}&sorting=price&direct={direct}"
@@ -88,8 +91,8 @@ class AviasalesAPI:
 
     @classmethod
     async def get_five_cheapest(cls) -> None:
-        tomorrow, next_week = cls.get_default_dates()
-        request_url = AviasalesAPI.create_custom_request_url(departure_date=tomorrow, unique="true", limit=5)
+        default_date = cls.get_default_dates()
+        request_url = AviasalesAPI.create_custom_request_url(departure_date=default_date, unique="true", limit=5)
         return await cls.get_one_city_price(request_url=request_url)
 
     @classmethod
