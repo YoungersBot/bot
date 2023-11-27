@@ -58,3 +58,10 @@ class KeyboardBuilder:
             [KeyboardButton(text=buttons.season)],
         ]
         return ReplyKeyboardMarkup(keyboard=season_keyboard, resize_keyboard=True)
+
+    @staticmethod
+    def feedback_keyboards():
+        feed_action_menuKB = InlineKeyboardMarkup(row_width=2, inline_keyboard=[
+            [InlineKeyboardButton(text='Оставить отзыв 📝', callback_data="feedback")],
+            [InlineKeyboardButton(text="Не хочу оставлять отзыв 🚫", callback_data="cancel_feedback")]])
+        return feed_action_menuKB
