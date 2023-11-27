@@ -33,15 +33,16 @@ from database.db_api import DatabaseQueries
 TOKEN = os.environ.get("BOT_TOKEN")
 dp = Dispatcher()
 
-
 class StartLocation(StatesGroup):
     choosing_location = State()
     choosing_city = State()
 
+class FeedbackState(StatesGroup):
+    waiting_for_feedback = State()
 
 
 async def set_commands(bot: Bot):
-    commands = [BotCommand(command='start', description='Начать заново'),
+    commands = [BotCommand(command='start1', description='Начать заново'),
                 BotCommand(command='feed', description='Обратная связь'),
                 BotCommand(command='subscriptions', description='Подписки'),
                 BotCommand(command='about', description='О боте')
@@ -159,6 +160,26 @@ async def airport_not_found(message: Message) -> None:
     await message.answer(answers.city_or_location, reply_markup=KeyboardBuilder.location_reply_keyboard())
 
 
+@dp.message(Command('feed'))
+async def start(message: Message):
+    await message.answer('Приветствую! Для того, чтобы оставить отзыв нажмите кнопку снизу',
+                             reply_markup=KeyboardBuilder.feedback_keyboards())
+
+@dp.callback_query(F.data == "feedback")
+async def show_feedback_message(call: CallbackQuery, state: FSMContext):
+    await call.message.answer("Ваш отзыв будет передан администратору. Введите пожалуйста сообщение: ")
+    await state.set_state(FeedbackState.waiting_for_feedback)
+
+@dp.message(FeedbackState.waiting_for_feedback)
+async def handle_feedback_message(message: Message, bot: Bot, state: FSMContext):
+    await bot.send_message(os.environ.get('ADMIN_ID'), f"Новый отзыв от {message.from_user.id}:\n{message.text}")
+    await message.answer("Спасибо за отзыв! Ваше сообщение было передано администратору.")
+    await state.clear()
+
+@dp.callback_query(lambda c: c.data == "cancel_feedback")
+async def cancel_feedback(call: CallbackQuery, state: FSMContext):
+    await call.message.answer('Ваше мнение важно для нас, будем рады вашим будущим отзывам!')
+    await state.clear()
 @dp.message(Command("help"))
 async def command_help_handler(message: Message) -> None:
     await message.answer(answers.help_command)
