@@ -303,6 +303,16 @@ async def season_handler(message: Message) -> None:
         await message.answer(answer_string, reply_markup=reply_keyboard)
 
 
+@dp.message(Command("cancel"))
+@dp.message(F.text.casefold() == "cancel")
+async def cancel_handler(message: Message, state: FSMContext) -> None:
+    current_state = await state.get_state()
+    if current_state is None:
+        return
+    logging.info("Cancelling state %r", current_state)
+    await state.clear()
+
+
 async def main() -> None:
     bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
     dp.include_router(weather_service.router)

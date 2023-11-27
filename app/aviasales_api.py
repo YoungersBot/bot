@@ -4,6 +4,7 @@ import os
 from typing import Optional
 
 from aiohttp import ClientSession
+from dateutils import relativedelta
 
 
 class AviasalesAPI:
@@ -13,16 +14,9 @@ class AviasalesAPI:
     @classmethod
     def get_default_dates(cls) -> str:
         this_date = datetime.date.today()
-
         if this_date.day < 20:
             return this_date.strftime("%Y-%m")
-        if this_date.month == 12:
-            next_month = 1
-        else:
-            next_month = this_date.month + 1
-
-        next_month_date = this_date.replace(day=1, month=next_month)
-
+        next_month_date = this_date + relativedelta(months=1)
         return next_month_date.strftime("%Y-%m")
 
     @classmethod
