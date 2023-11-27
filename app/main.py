@@ -16,7 +16,7 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     KeyboardButton,
     Message,
-    ReplyKeyboardMarkup,
+    ReplyKeyboardMarkup, BotCommand,
 )
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
@@ -38,6 +38,15 @@ class StartLocation(StatesGroup):
     choosing_location = State()
     choosing_city = State()
 
+
+
+async def set_commands(bot: Bot):
+    commands = [BotCommand(command='start', description='Начать заново'),
+                BotCommand(command='feed', description='Обратная связь'),
+                BotCommand(command='subscriptions', description='Подписки'),
+                BotCommand(command='about', description='О боте')
+                ]
+    await bot.set_my_commands(commands)
 
 @dp.message(StateFilter(None), CommandStart())
 async def command_start_handler(message: Message, state: FSMContext) -> None:
@@ -306,6 +315,7 @@ async def season_handler(message: Message) -> None:
 async def main() -> None:
     bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
     dp.include_router(weather_service.router)
+    await set_commands(bot)
     await dp.start_polling(bot)
 
 
