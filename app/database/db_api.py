@@ -76,6 +76,15 @@ class DatabaseQueries:
                 await cursor.close()
                 return result
 
+    @classmethod
+    async def subscriptions(cls, user_id):
+        async with aiomysql.connect(**cls.CONNECTION_CONFIG) as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(f"SELECT user_chat_id,departure_city_code, arrival_city_code, month FROM subscriptions "
+                                     f"WHERE user_id = {user_id}")
+                result = await cursor.fetchall()
+                await cursor.close()
+                return result
 
     @classmethod
     async def get_users_city(cls, user_id):

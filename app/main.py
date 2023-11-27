@@ -1,4 +1,6 @@
 import asyncio
+import aioschedule
+from _datetime import datetime
 import logging
 import os
 import random
@@ -19,8 +21,9 @@ from aiogram.types import (
     ReplyKeyboardMarkup,
 )
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
-
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import weather_service
+
 from aviasales_api import AviasalesAPI
 from bot_utils.answers import answers
 from bot_utils.buttons import buttons
@@ -69,7 +72,8 @@ async def location(message: Message, state: FSMContext) -> None:
             airports_list.append(name[0])
         airports_text = ", ".join(airports_list)
         await message.answer(answers.location_many.format(in_city=in_city, country=country, airport=airport_name,
-                             airports=airports_text), reply_markup=KeyboardBuilder.main_reply_keyboard())
+                                                          airports=airports_text),
+                             reply_markup=KeyboardBuilder.main_reply_keyboard())
         await state.clear()
     else:
         await message.answer(answers.location.format(in_city=in_city, country=country, airport=airport_name),
@@ -284,7 +288,7 @@ async def season_handler(message: Message) -> None:
         result = await response
         if result:
             ticket = {"ticket_url": result[0].get("link", ""), "price": result[0].get("price", 0), "destination":
-                      city[1], "lat": city[2], "lon": city[3], "destination_code": city[0]}
+                city[1], "lat": city[2], "lon": city[3], "destination_code": city[0]}
             ticket_list.append(ticket)
         if len(ticket_list) == 5:
             break
@@ -313,12 +317,18 @@ async def cancel_handler(message: Message, state: FSMContext) -> None:
     await state.clear()
 
 
-async def main() -> None:
-    bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
-    dp.include_router(weather_service.router)
-    await dp.start_polling(bot)
+async def message_for_subscription(bot):
+    await bot.send_message( 1059511236, 'this message will send every day')
 
+    async def main() -> None:
+        bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
+        dp.include_router(weather_service.router)
+        scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
+        scheduler.add_job(message_for_subscription, trigger='cron', hour=23,
+                          minute=42, start_date=datetime.now(), kwargs={'bot': bot})
+        scheduler.start()
+        await dp.start_polling(bot)
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-    asyncio.run(main())
+    if __name__ == "__main__":
+        logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+        asyncio.run(main())
