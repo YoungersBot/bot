@@ -11,7 +11,7 @@ class AviasalesAPI:
     TEST_CITIES = ["HRG", "VRA", "DXB"]
 
     @classmethod
-    def get_default_dates(cls) -> tuple[str]:
+    def get_default_dates(cls) -> str:
         this_date = datetime.date.today()
 
         if this_date.day < 20:
@@ -39,7 +39,6 @@ class AviasalesAPI:
         month = cls.get_default_dates()
         if not departure_date:
             departure_date = month
-
         return (
             f"https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin=MOW&destination={destination}"
             f"&departure_at={departure_date}&unique=false&sorting=price&direct=false"
@@ -58,11 +57,6 @@ class AviasalesAPI:
         limit: int = 1,
         one_way: str = "true",
     ) -> str:
-        print(
-            f"https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin={origin}&destination={destination}"
-            f"&departure_at={departure_date}&return_at={return_date}&unique={unique}&sorting=price&direct={direct}"
-            f"&cy=rub&limit={limit}&page=1&one_way={one_way}&token={cls.TOKEN}"
-        )
         return (
             f"https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin={origin}&destination={destination}"
             f"&departure_at={departure_date}&return_at={return_date}&unique={unique}&sorting=price&direct={direct}"
@@ -120,9 +114,11 @@ class AviasalesAPI:
 
 if __name__ == "__main__":
 
-    async def check_result_coroutine():
-        task = asyncio.create_task(AviasalesAPI.get_five_cheapest())
-        result = await task
-        print(result)
+    # async def check_result_coroutine():
+    #     task = asyncio.create_task(AviasalesAPI.get_five_cheapest())
+    #     result = await task
+    #     print(result)
 
-    asyncio.run(check_result_coroutine())
+    # asyncio.run(check_result_coroutine())
+
+    print(AviasalesAPI.get_default_dates())

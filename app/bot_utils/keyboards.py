@@ -27,7 +27,7 @@ class KeyboardBuilder:
     def main_reply_keyboard() -> ReplyKeyboardMarkup:
         main_keyboard_buttons = [
             [
-                KeyboardButton(text=buttons.subscribes),
+                KeyboardButton(text=buttons.subscriptions),
                 KeyboardButton(text=buttons.five_cheapest),
                 KeyboardButton(text=buttons.weather),
                 KeyboardButton(text=buttons.season),
@@ -36,11 +36,25 @@ class KeyboardBuilder:
         return ReplyKeyboardMarkup(keyboard=main_keyboard_buttons, resize_keyboard=True, one_time_keyboard=False)
 
     @staticmethod
-    def ticket_reply_keyboard(ticket_url: str) -> InlineKeyboardMarkup:
+    def ticket_reply_keyboard(ticket_url: str, data) -> InlineKeyboardMarkup:
         ticket_keyboard_buttons = [
             [
                 InlineKeyboardButton(text=buttons.buy, url=ticket_url),
-                InlineKeyboardButton(text=buttons.subscribe, callback_data=buttons.subscribe),
+                InlineKeyboardButton(text=buttons.subscribe, callback_data=data),
             ],
         ]
         return InlineKeyboardMarkup(inline_keyboard=ticket_keyboard_buttons)
+
+    @staticmethod
+    def weather_reply_keyboard():
+        weather_keyboard = [
+            [KeyboardButton(text=buttons.weather_in_your_city), KeyboardButton(text=buttons.weather_in_any_city)],
+        ]
+        return ReplyKeyboardMarkup(keyboard=weather_keyboard, resize_keyboard=True)
+
+    @staticmethod
+    def season_reply_keyboard():
+        season_keyboard = [
+            [KeyboardButton(text=buttons.season)],
+        ]
+        return ReplyKeyboardMarkup(keyboard=season_keyboard, resize_keyboard=True)

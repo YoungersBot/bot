@@ -4,7 +4,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class Answers:
     cheapest = "Самые дешёвые билеты:"
-    you_can_fly: str = "Вы можете улететь в {destination} за {price} ."
+    you_can_fly: str = "Вы можете улететь в город {destination} за {price} р.\n {weather}"
     subscribe: str = "Вы успешно подписаны!"
     no_tickets: str = "Нет билетов по заданному направлению."
 
@@ -15,7 +15,7 @@ class Answers:
     start: str = "Здравствуйте, {username}"
     city_or_location: str = "Напишите название города из которого Вы хотели бы вылетать или предоставьте доступ к " \
                             "геолокации и мы найдём ближайший аэропорт."
-    help_command: str = "Когда-нибудь здесь будет описание работы бота, пока просто перечень команд: \n" "/destination"
+    help_command: str = "Когда-нибудь здесь будет описание работы бота"
 
     location: str = "Ближайший к Вам аэропорт - {airport} в {in_city} ({country})."
     location_many: str = "Ближайший к Вам аэропорт - {airport} в {in_city} ({country}).\n" \
@@ -29,9 +29,15 @@ class Answers:
     weather: str = "Введите город:"
     weather_in_your_city: str = "{result}."
     weather_in_any_city: str = "{result}."
+    weather_action: str = "Где Вы хотите узнать погоду?"
+    weather_wrong_city: str = "Для города {city} нет данных. Проверьте название или введите другой город."
+
     actions: str = "Выберите действие:"
     season: str = "Mожно улететь в летний сезон:"
-    season_weather: str = "Вы можете улететь в {destination} за {price} {result}."
+    season_weather: str = "Вы можете улететь в {destination} за {price}\n {weather}"
+
+    subscriptions = "Ваши подписки:\n"
+    subscription = "Из города {origin} в город {arrival}"
 
 
 answers = Answers()

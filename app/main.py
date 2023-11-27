@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import random
 import sys
 from typing import Optional
 
@@ -32,57 +33,6 @@ from database.db_api import DatabaseQueries
 TOKEN = os.environ.get("BOT_TOKEN")
 dp = Dispatcher()
 
-cities_where_the_season = [
-    "AUH",
-    "SSA",
-    "BZC",
-    "SCU",
-    "TND",
-    "UPB",
-    "VRA",
-    "PQC",
-    "PHH",
-    "CSJ",
-    "CEB",
-    "TAG",
-    "KCI",
-    "DXB",
-    "SHJ",
-    "FJR",
-    "GOI",
-    "PYX",
-    "CNX",
-    "HHQ",
-    "TRV",
-    "SYX",
-    "REC",
-]
-cities = {
-    "AUH": "Абу-Даби",
-    "SSA": "Сальвадор",
-    "BZC": "Бузиос",
-    "SCU": "Сантьяго-де-Куба",
-    "TND": "Тринидад",
-    "UPB": "Гавана",
-    "VRA": "Варадеро",
-    "PQC": "Фукуок",
-    "PHH": "Фантхьет",
-    "CSJ": "Вунгтау",
-    "CEB": "Себу",
-    "TAG": "Бохоль",
-    "KCI": "Корон",
-    "DXB": "Дубай",
-    "SHJ": "Шарджа",
-    "FJR": "Фуджейра",
-    "GOI": "Гоа",
-    "PYX": "Паттайя",
-    "CNX": "Ко Чанг",
-    "HHQ": "Районг",
-    "TRV": "Хуахин",
-    "SYX": "остров Хайнань",
-    "REC": "Ресифи",
-}
-
 
 class StartLocation(StatesGroup):
     choosing_location = State()
@@ -99,7 +49,7 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
 
 
 @dp.message(StartLocation.choosing_location, F.content_type == "location")
-async def location(message: Message) -> None:
+async def location(message: Message, state: FSMContext) -> None:
     user_id = message.from_user.id
     username = message.from_user.username
     chat_id = message.chat.id
@@ -120,9 +70,11 @@ async def location(message: Message) -> None:
         airports_text = ", ".join(airports_list)
         await message.answer(answers.location_many.format(in_city=in_city, country=country, airport=airport_name,
                              airports=airports_text), reply_markup=KeyboardBuilder.main_reply_keyboard())
+        await state.clear()
     else:
         await message.answer(answers.location.format(in_city=in_city, country=country, airport=airport_name),
                              reply_markup=KeyboardBuilder.main_reply_keyboard())
+        await state.clear()
 
 
 @dp.message(StartLocation.choosing_location, lambda message: message.text)
@@ -262,80 +214,93 @@ async def wrong_limit(message: Message):
     await message.answer(text=answers.wrong_limit)
 
 
+@dp.message(lambda message: message.text == buttons.subscriptions)
+async def show_subscriptions(message: Message):
+    user_id = message.from_user.id
+    subscriptions = await asyncio.create_task(DatabaseQueries.user_subscriptions(user_id))
+    answer_text = answers.subscriptions
+    for subscription in subscriptions:
+        origin = await asyncio.create_task(DatabaseQueries.city_by_code(subscription[0]))
+        arrival = await asyncio.create_task(DatabaseQueries.city_by_code(subscription[1]))
+        answer_text += answers.subscription.format(origin=origin[0], arrival=arrival[0]) + "\n"
+
+    await message.answer(answer_text)
+
+
 @dp.message(lambda message: message.text == buttons.five_cheapest)
 async def five_cheapest_handler(message: Message) -> None:
+    users_city = await asyncio.create_task(DatabaseQueries.get_users_city(message.from_user.id))
+    origin = users_city[3]
     default_date = AviasalesAPI.get_default_dates()
-    request_url = AviasalesAPI.create_custom_request_url(departure_date=default_date, unique="true", limit=5)
+    request_url = AviasalesAPI.create_custom_request_url(origin=origin, departure_date=default_date, unique="true",
+                                                         limit=5)
     task_get_five = asyncio.create_task(AviasalesAPI.get_one_city_price(request_url=request_url))
     result = await task_get_five
     await message.answer(answers.cheapest)
 
     for destination in result:
         ticket_url = destination.get("link", "")
-        reply_keyboard = KeyboardBuilder.ticket_reply_keyboard(ticket_url)
-        answer_string = answers.you_can_fly.format(destination=destination["destination"], price=destination["price"])
+        destination_city = await asyncio.create_task(DatabaseQueries.city_by_code(destination["destination"]))
+        data = f"subscription {origin} {destination['destination']}"
+        reply_keyboard = KeyboardBuilder.ticket_reply_keyboard(ticket_url, data)
+
+        weather_city = asyncio.create_task(WeatherApi.get_weather_with_coor(destination_city[1], destination_city[2]))
+        result = await weather_city
+        parsed_result = WeatherApi.small_parse_response(result)
+        answer_string = answers.you_can_fly.format(
+            destination=destination_city[0], price=destination["price"], weather=parsed_result
+        )
+
         await message.answer(answer_string, reply_markup=reply_keyboard)
 
 
-@dp.callback_query(lambda callback: callback.data == buttons.subscribe)
+@dp.callback_query(lambda callback: callback.data.split()[0] == "subscription")
 async def subscribe(callback: CallbackQuery) -> None:
+    data = callback.data.split()
+    await DatabaseQueries.subscription(callback.from_user.id, data[1], data[2])
     await callback.message.answer(answers.subscribe)
 
 
 @dp.message(Command("season"))
 async def command_season(message: Message):
-    kb = [
-        [KeyboardButton(text=buttons.season)],
-    ]
-    keyboard = ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
-    await message.answer(answers.actions, reply_markup=keyboard)
-
-
-#
+    await season_handler(message)
 
 
 @dp.message(lambda message: message.text == buttons.season)
 async def season_handler(message: Message) -> None:
     ticket_list = []
-    for city in cities_where_the_season:
+    users_city = await asyncio.create_task(DatabaseQueries.get_users_city(message.from_user.id))
+    origin = users_city[3]
+    cities_where_the_season = await asyncio.create_task(DatabaseQueries.cities_where_the_season())
+    random_cities_where_season = random.sample(cities_where_the_season, len(cities_where_the_season))
+
+    for city in random_cities_where_season:
         default_date = AviasalesAPI.get_default_dates()
         request_url = AviasalesAPI.create_custom_request_url(
-            destination=city, departure_date=default_date, unique="true", limit=1
+            origin=origin, destination=city[0], departure_date=default_date, unique="true", limit=1
         )
 
         response = asyncio.create_task(AviasalesAPI.get_one_city_price(request_url=request_url))
         result = await response
         if result:
-            ticket_list.append(result)
+            ticket = {"ticket_url": result[0].get("link", ""), "price": result[0].get("price", 0), "destination":
+                      city[1], "lat": city[2], "lon": city[3], "destination_code": city[0]}
+            ticket_list.append(ticket)
         if len(ticket_list) == 5:
             break
 
     await message.answer(answers.season)
     for ticket in ticket_list:
-        destination = ticket[0]
-        ticket_url = destination.get("link", "")
-        weather_city = asyncio.create_task(WeatherApi.get_weather(cities[destination["destination"]]))
+        data = f"subscription {origin} {ticket['destination_code']}"
+        weather_city = asyncio.create_task(WeatherApi.get_weather_with_coor(ticket["lat"], ticket["lon"]))
         result = await weather_city
-        reply_keyboard = KeyboardBuilder.ticket_reply_keyboard(ticket_url)
+        parsed_result = WeatherApi.small_parse_response(result)
+        reply_keyboard = KeyboardBuilder.ticket_reply_keyboard(ticket["ticket_url"], data)
         answer_string = answers.season_weather.format(
-            destination=destination["destination"], price=destination["price"], result=result
+            destination=ticket["destination"], price=ticket["price"], weather=parsed_result
         )
 
         await message.answer(answer_string, reply_markup=reply_keyboard)
-
-
-# @dp.message(Command("location"))
-# async def cmd_location_buttons(message: Message):
-#     builder = ReplyKeyboardBuilder()
-#
-#     builder.row(
-#         KeyboardButton(text="Запросить геолокацию", request_location=True),
-#     )
-#
-#     await message.answer(
-#         "Выберите действие:",
-#         reply_markup=builder.as_markup(resize_keyboard=True),
-#     )
 
 
 async def main() -> None:

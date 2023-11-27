@@ -55,12 +55,65 @@ class DatabaseQueries:
                                      (user_id, username, chat_id, city_id, city_id))
                 await cursor.close()
 
+    @classmethod
+    async def subscription(cls, user_id, origin, destination):
+        async with aiomysql.connect(**cls.CONNECTION_CONFIG) as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute("INSERT INTO subscriptions"
+                                     "(user_id, departure_city_code, arrival_city_code)"
+                                     "values (%s,%s,%s)", (user_id, origin, destination))
+                await cursor.execute(f"UPDATE users SET subscription = 1 WHERE user_id = {user_id}")
+                await cursor.close()
+
+
+    @classmethod
+    async def user_subscriptions(cls, user_id):
+        async with aiomysql.connect(**cls.CONNECTION_CONFIG) as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(f"SELECT departure_city_code, arrival_city_code FROM subscriptions "
+                                     f"WHERE user_id = {user_id}")
+                result = await cursor.fetchall()
+                await cursor.close()
+                return result
+
+
+    @classmethod
+    async def get_users_city(cls, user_id):
+        async with aiomysql.connect(**cls.CONNECTION_CONFIG) as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(f"SELECT cities.city_name_ru, cities.lat, cities.lon, cities.city_code FROM "
+                                     f"cities JOIN users ON cities.id = users.city_id WHERE users.user_id = {user_id}")
+                result = await cursor.fetchone()
+                await cursor.close()
+                return result
+
+    @classmethod
+    async def cities_where_the_season(cls, season="S"):
+        current_month = datetime.datetime.now().month
+        async with aiomysql.connect(**cls.CONNECTION_CONFIG) as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(f"SELECT cities.city_code, cities.city_name_ru, cities.lat, cities.lon "
+                                     f"FROM seasons JOIN cities ON cities.country_id = seasons.country_id "
+                                     f"WHERE seasons.month_{current_month} = '{season}'")
+                result = await cursor.fetchall()
+                await cursor.close()
+                return result
+
+    @classmethod
+    async def city_by_code(cls, city_code):
+        async with aiomysql.connect(**cls.CONNECTION_CONFIG) as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(f"SELECT city_name_ru, lat, lon FROM cities WHERE city_code = '{city_code}'")
+                result = await cursor.fetchone()
+                await cursor.close()
+                return result
+
 
 if __name__ == "__main__":
 
     async def check_result_coroutine():
         code = "LED"
-        test_task = await asyncio.create_task(DatabaseQueries.count_airports_in_city_by_code(code))
+        test_task = await asyncio.create_task(DatabaseQueries.cities_where_the_season())
 
         print(test_task)
 
