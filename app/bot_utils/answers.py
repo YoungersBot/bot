@@ -38,6 +38,7 @@ class Answers:
 
     subscriptions = "Ваши подписки:\n"
     subscription = "Из города {origin} в город {arrival}"
+    unsubscription = "Подписка отменена"
 
 
 answers = Answers()

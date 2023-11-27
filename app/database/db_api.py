@@ -65,6 +65,13 @@ class DatabaseQueries:
                 await cursor.execute(f"UPDATE users SET subscription = 1 WHERE user_id = {user_id}")
                 await cursor.close()
 
+    @classmethod
+    async def unsubscription(cls, user_id, origin, destination):
+        async with aiomysql.connect(**cls.CONNECTION_CONFIG) as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(f"DELETE FROM subscriptions WHERE user_id = {user_id} AND departure_city_code = "
+                                     f"'{origin}' AND arrival_city_code = '{destination}'")
+                await cursor.close()
 
     @classmethod
     async def user_subscriptions(cls, user_id):

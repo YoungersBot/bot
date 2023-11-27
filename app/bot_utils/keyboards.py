@@ -46,6 +46,13 @@ class KeyboardBuilder:
         return InlineKeyboardMarkup(inline_keyboard=ticket_keyboard_buttons)
 
     @staticmethod
+    def delete_subscription(data):
+        delete_subscription_keyboard = [
+            [InlineKeyboardButton(text=buttons.unsubscribe, callback_data=data)],
+        ]
+        return InlineKeyboardMarkup(inline_keyboard=delete_subscription_keyboard)
+
+    @staticmethod
     def weather_reply_keyboard():
         weather_keyboard = [
             [KeyboardButton(text=buttons.weather_in_your_city), KeyboardButton(text=buttons.weather_in_any_city)],

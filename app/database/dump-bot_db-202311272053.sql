@@ -1,8 +1,8 @@
 -- MySQL dump 10.13  Distrib 8.0.19, for Win64 (x86_64)
 --
--- Host: localhost    Database: travelnavi
+-- Host: localhost    Database: bot_db
 -- ------------------------------------------------------
--- Server version	8.0.35
+-- Server version	8.0.32
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -149,18 +149,18 @@ DROP TABLE IF EXISTS `seasons`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `seasons` (
   `country_id` int DEFAULT NULL,
-  `mounth_1` varchar(255) DEFAULT NULL,
-  `mounth_2` varchar(255) DEFAULT NULL,
-  `mounth_3` varchar(255) DEFAULT NULL,
-  `mounth_4` varchar(255) DEFAULT NULL,
-  `mounth_5` varchar(255) DEFAULT NULL,
-  `mounth_6` varchar(255) DEFAULT NULL,
-  `mounth_7` varchar(255) DEFAULT NULL,
-  `mounth_8` varchar(255) DEFAULT NULL,
-  `mounth_9` varchar(255) DEFAULT NULL,
-  `mounth_10` varchar(255) DEFAULT NULL,
-  `mounth_11` varchar(255) DEFAULT NULL,
-  `mounth_12` varchar(255) DEFAULT NULL,
+  `month_1` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `month_2` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `month_3` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `month_4` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `month_5` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `month_6` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `month_7` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `month_8` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `month_9` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `month_10` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `month_11` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `month_12` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   KEY `country_id` (`country_id`),
   CONSTRAINT `seasons_ibfk_1` FOREIGN KEY (`country_id`) REFERENCES `countries` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -184,15 +184,15 @@ DROP TABLE IF EXISTS `subscriptions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `subscriptions` (
-  `user_chat_id` bigint DEFAULT NULL,
+  `user_id` bigint DEFAULT NULL,
   `departure_city_code` varchar(255) DEFAULT NULL,
-  `arrival_airport_iata_code` varchar(255) DEFAULT NULL,
-  KEY `sub_fk_1` (`user_chat_id`),
-  KEY `sub_fk_2` (`departure_city_code`),
-  KEY `sub_fk_3` (`arrival_airport_iata_code`),
-  CONSTRAINT `sub_fk_1` FOREIGN KEY (`user_chat_id`) REFERENCES `users` (`chat_id`),
-  CONSTRAINT `sub_fk_2` FOREIGN KEY (`departure_city_code`) REFERENCES `cities` (`city_code`),
-  CONSTRAINT `sub_fk_3` FOREIGN KEY (`arrival_airport_iata_code`) REFERENCES `airports` (`iata_code`)
+  `arrival_city_code` varchar(255) DEFAULT NULL,
+  KEY `user_id` (`user_id`),
+  KEY `departure_city_code` (`departure_city_code`),
+  KEY `arrival_city_code` (`arrival_city_code`),
+  CONSTRAINT `subscriptions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`chat_id`),
+  CONSTRAINT `subscriptions_ibfk_2` FOREIGN KEY (`departure_city_code`) REFERENCES `cities` (`city_code`),
+  CONSTRAINT `subscriptions_ibfk_3` FOREIGN KEY (`arrival_city_code`) REFERENCES `cities` (`city_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -202,6 +202,7 @@ CREATE TABLE `subscriptions` (
 
 LOCK TABLES `subscriptions` WRITE;
 /*!40000 ALTER TABLE `subscriptions` DISABLE KEYS */;
+INSERT INTO `subscriptions` VALUES (833523539,'LED','MSQ'),(833523539,'LED','BAH');
 /*!40000 ALTER TABLE `subscriptions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -213,19 +214,20 @@ DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `users` (
-  `id` bigint NOT NULL,
+  `id` bigint NOT NULL AUTO_INCREMENT,
   `user_id` bigint DEFAULT NULL,
   `chat_id` bigint DEFAULT NULL,
   `reg_time` datetime DEFAULT CURRENT_TIMESTAMP,
   `last_time` datetime DEFAULT CURRENT_TIMESTAMP,
   `subscription` tinyint(1) DEFAULT '0',
   `city_id` int DEFAULT NULL,
+  `username` varchar(100) NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
+  UNIQUE KEY `user_id` (`user_id`) USING BTREE,
   KEY `chat_id` (`chat_id`),
   KEY `users_FK` (`city_id`),
   CONSTRAINT `users_FK` FOREIGN KEY (`city_id`) REFERENCES `cities` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -234,11 +236,12 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,833523539,833523539,'2023-11-26 02:43:09','2023-11-26 02:43:09',1,1014,'toliksyrchin'),(5,865970127,865970127,'2023-11-26 07:15:52','2023-11-26 07:15:52',0,798,'timofeinazarov');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Dumping routines for database 'travelnavi'
+-- Dumping routines for database 'bot_db'
 --
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -250,4 +253,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-11-22  1:19:44
+-- Dump completed on 2023-11-27 20:53:15

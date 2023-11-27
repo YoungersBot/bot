@@ -246,15 +246,24 @@ async def wrong_limit(message: Message):
 
 @dp.message(lambda message: message.text == buttons.subscriptions)
 async def show_subscriptions(message: Message):
-    user_id = message.from_user.id
+    user_id = message.chat.id
     subscriptions = await asyncio.create_task(DatabaseQueries.user_subscriptions(user_id))
-    answer_text = answers.subscriptions
+    await message.answer(answers.subscriptions)
+
     for subscription in subscriptions:
         origin = await asyncio.create_task(DatabaseQueries.city_by_code(subscription[0]))
         arrival = await asyncio.create_task(DatabaseQueries.city_by_code(subscription[1]))
-        answer_text += answers.subscription.format(origin=origin[0], arrival=arrival[0]) + "\n"
+        answer_text = answers.subscription.format(origin=origin[0], arrival=arrival[0])
+        data = f"unsubscribe {subscription[0]} {subscription[1]}"
+        await message.answer(answer_text, reply_markup=KeyboardBuilder.delete_subscription(data))
 
-    await message.answer(answer_text)
+
+@dp.callback_query(lambda callback: callback.data.split()[0] == "unsubscribe")
+async def unsubscribe(callback: CallbackQuery) -> None:
+    data = callback.data.split()
+    await DatabaseQueries.unsubscription(callback.from_user.id, data[1], data[2])
+    await callback.message.answer(answers.unsubscription)
+    await show_subscriptions(callback.message)
 
 
 @dp.message(lambda message: message.text == buttons.five_cheapest)

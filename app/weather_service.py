@@ -53,10 +53,11 @@ async def any_city(message: Message, state: FSMContext) -> None:
 async def weather_any_city(message: Message, state: FSMContext) -> None:
     weather_response = asyncio.create_task(WeatherApi.get_weather(message.text))
     result = await weather_response
+    city = message.text
     if len(result) <= 2:
-        await message.reply(answers.weather_wrong_city.format(city=message.text))
+        await message.reply(answers.weather_wrong_city.format(city=city))
     else:
-        result = WeatherApi.parse_response(result)
+        result = WeatherApi.parse_response(result, city)
         await message.reply(answers.weather_in_any_city.format(result=result),
                             reply_markup=KeyboardBuilder.main_reply_keyboard())
         await state.clear()
