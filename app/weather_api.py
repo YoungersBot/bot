@@ -15,15 +15,16 @@ class WeatherApi:
         "Thunderstorm": "\U000026A1",
         "Snow": "\U0001F328",
         "Mist": "\U0001F32B",
+        "Fog": "",
+        "Haze": "",
     }
 
     @classmethod
-    def _parse_response(cls, response: dict) -> dict:
+    def parse_response(cls, response: dict, city) -> str:
         return (
-            f"Погода в городе "
-            f'{response["name"].capitalize()}:\n'
+            f'Погода в городе {city}:\n'
             f'{response["weather"][0]["description"].capitalize()}'
-            f'{cls.weather_icon[response["weather"][0]["main"]]} \n'
+            f'{cls.weather_icon.get(response["weather"][0]["main"], "")} \n'
             f'Температура: {response["main"]["temp"]}C°\n'
             f'Ощущается как: {response["main"]["feels_like"]}C°\n'
             f'Влажность: {response["main"]["humidity"]}%\n'
@@ -32,27 +33,32 @@ class WeatherApi:
         )
 
     @classmethod
+    def small_parse_response(cls, response: dict) -> str:
+        return (
+            f'{response["weather"][0]["description"].capitalize()}'
+            f'{cls.weather_icon.get(response["weather"][0]["main"])} \n'
+            f'Температура: {response["main"]["temp"]}C°\n'
+            f'Влажность: {response["main"]["humidity"]}%\n'
+        )
+
+    @classmethod
     async def get_weather_with_coor(cls, lat, lon):
         async with ClientSession() as session:
             async with session.get(
-                f"https://api.openweathermap.org/data/2.5/weather?lat="
-                f"{lat}&lon={lon}&appid={cls.TOKEN}&units=metric&lang=ru"
+                f"https://api.openweathermap.org/data/2.5/weather?"
+                f"lat={lat}&lon={lon}&appid={cls.TOKEN}&units=metric&lang=ru"
             ) as response:
                 data = await response.json()
-                if len(data) <= 2:
-                    return None
-                return cls._parse_response(data)
+                return data
 
     @classmethod
     async def get_weather(cls, city):
         async with ClientSession() as session:
             async with session.get(
-                f"https://api.openweathermap.org/data/2.5/weather?" f"q={city}&appid={cls.TOKEN}&units=metric&lang=ru"
+                f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={cls.TOKEN}&units=metric&lang=ru"
             ) as response:
                 data = await response.json()
-                if len(data) <= 2:
-                    return f"Для города {city} нет данных. Проверьте название или введите другой город."
-                return cls._parse_response(data)
+                return data
 
 
 if __name__ == "__main__":
