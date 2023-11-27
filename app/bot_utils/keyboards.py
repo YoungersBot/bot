@@ -1,4 +1,9 @@
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
+from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
+)
 
 from .buttons import buttons
 
@@ -11,14 +16,24 @@ class KeyboardBuilder:
                 KeyboardButton(text=buttons.location, request_location=True),
             ],
         ]
-        return ReplyKeyboardMarkup(keyboard=location_keyboard_buttons, resize_keyboard=True, one_time_keyboard=True)
+        return ReplyKeyboardMarkup(
+            keyboard=location_keyboard_buttons,
+            resize_keyboard=True,
+            one_time_keyboard=True,
+        )
 
     @staticmethod
-    def location_two_cities_keyboard(city_one: tuple, city_two: tuple) -> InlineKeyboardMarkup:
+    def location_two_cities_keyboard(
+        city_one: tuple, city_two: tuple
+    ) -> InlineKeyboardMarkup:
         ticket_keyboard_buttons = [
             [
-                InlineKeyboardButton(text=f"{city_one[0]} ({city_one[2]})", callback_data=city_one[1]),
-                InlineKeyboardButton(text=f"{city_two[0]} ({city_two[2]})", callback_data=city_two[1]),
+                InlineKeyboardButton(
+                    text=f"{city_one[0]} ({city_one[2]})", callback_data=city_one[1]
+                ),
+                InlineKeyboardButton(
+                    text=f"{city_two[0]} ({city_two[2]})", callback_data=city_two[1]
+                ),
             ],
         ]
         return InlineKeyboardMarkup(inline_keyboard=ticket_keyboard_buttons)
@@ -33,7 +48,11 @@ class KeyboardBuilder:
                 KeyboardButton(text=buttons.season),
             ],
         ]
-        return ReplyKeyboardMarkup(keyboard=main_keyboard_buttons, resize_keyboard=True, one_time_keyboard=False)
+        return ReplyKeyboardMarkup(
+            keyboard=main_keyboard_buttons,
+            resize_keyboard=True,
+            one_time_keyboard=False,
+        )
 
     @staticmethod
     def ticket_reply_keyboard(ticket_url: str, data) -> InlineKeyboardMarkup:
@@ -55,7 +74,10 @@ class KeyboardBuilder:
     @staticmethod
     def weather_reply_keyboard():
         weather_keyboard = [
-            [KeyboardButton(text=buttons.weather_in_your_city), KeyboardButton(text=buttons.weather_in_any_city)],
+            [
+                KeyboardButton(text=buttons.weather_in_your_city),
+                KeyboardButton(text=buttons.weather_in_any_city),
+            ],
         ]
         return ReplyKeyboardMarkup(keyboard=weather_keyboard, resize_keyboard=True)
 

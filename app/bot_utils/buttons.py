@@ -14,4 +14,5 @@ class ButtonsText:
     location: str = "Запрос геолокации"
     unsubscribe: str = "Отменить подписку"
 
+
 buttons = ButtonsText()
