@@ -12,5 +12,7 @@ class ButtonsText:
     weather_in_your_city: str = "Погода в городе отправления"
     weather_in_any_city: str = "Погода в любом городе"
     location: str = "Запрос геолокации"
+    unsubscribe: str = "Отменить подписку"
+
 
 buttons = ButtonsText()

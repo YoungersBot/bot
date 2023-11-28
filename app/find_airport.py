@@ -1,19 +1,19 @@
 import asyncio
 import json
 
-from geopy.distance import geodesic
-
 from database.db_api import DatabaseQueries
+from geopy.distance import geodesic
 
 
 class AirportFinder:
-
     @classmethod
     async def find_nearest_airport(cls, user_coordinates):
         nearest_airport = None
         nearest_city_code = None
         min_distance = float("inf")
-        airports_coords = await asyncio.create_task(DatabaseQueries.get_airports_coordinates())
+        airports_coords = await asyncio.create_task(
+            DatabaseQueries.get_airports_coordinates()
+        )
 
         for airport_name, city_code, latitude, longitude in airports_coords:
             airport_coordinates = (latitude, longitude)

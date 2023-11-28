@@ -22,7 +22,7 @@ class WeatherApi:
     @classmethod
     def parse_response(cls, response: dict, city) -> str:
         return (
-            f'Погода в городе {city}:\n'
+            f"Погода в городе {city}:\n"
             f'{response["weather"][0]["description"].capitalize()}'
             f'{cls.weather_icon.get(response["weather"][0]["main"], "")} \n'
             f'Температура: {response["main"]["temp"]}C°\n'
