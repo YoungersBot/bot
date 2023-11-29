@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import os
+import time
 
 import aiomysql
 
@@ -10,8 +11,8 @@ class DatabaseQueries:
         "db": os.environ.get("MYSQL_DATABASE"),
         "port": 3306,
         "host": "bot-db",
-        "user": os.environ.get("MYSQL_USER"),
-        "password": os.environ.get("MYSQL_PASSWORD"),
+        "user": os.environ.get("MYSQL_ROOT_USER"),
+        "password": os.environ.get("MYSQL_ROOT_PASSWORD"),
         "autocommit": True,
     }
 
@@ -56,11 +57,13 @@ class DatabaseQueries:
     async def insert_new_user(cls, user_id, username, chat_id, city_id):
         async with aiomysql.connect(**cls.CONNECTION_CONFIG) as connection:
             async with connection.cursor() as cursor:
+                reg_time = time.strftime('%Y-%m-%d %H:%M:%S')
+                last_time = time.strftime('%Y-%m-%d %H:%M:%S')
+                print(user_id, username, chat_id, city_id, last_time)
                 await cursor.execute(
-                    "INSERT INTO users (user_id, username, chat_id, city_id)"
-                    "values (%s,"
-                    "%s,%s,%s) ON DUPLICATE KEY UPDATE city_id = %s",
-                    (user_id, username, chat_id, city_id, city_id),
+                    "INSERT INTO users (user_id, username, chat_id,city_id)"
+                    "values (%s,%s,%s,%s) ON DUPLICATE KEY UPDATE last_time = %s",
+                    (user_id, username, chat_id, city_id, last_time),
                 )
                 await cursor.close()
 
@@ -68,9 +71,10 @@ class DatabaseQueries:
     async def subscription(cls, user_id, origin, destination):
         async with aiomysql.connect(**cls.CONNECTION_CONFIG) as connection:
             async with connection.cursor() as cursor:
+                print()
                 await cursor.execute(
                     "INSERT INTO subscriptions"
-                    "(user_id, departure_city_code, arrival_city_code)"
+                    "(user_id, departure_city_code, arrival_airport_iata_code)"
                     "values (%s,%s,%s)",
                     (user_id, origin, destination),
                 )
@@ -85,7 +89,7 @@ class DatabaseQueries:
             async with connection.cursor() as cursor:
                 await cursor.execute(
                     f"DELETE FROM subscriptions WHERE user_id = {user_id} AND departure_city_code = "
-                    f"'{origin}' AND arrival_city_code = '{destination}'"
+                    f"'{origin}' AND arrival_airport_iata_code = '{destination}'"
                 )
                 await cursor.close()
 
@@ -94,7 +98,7 @@ class DatabaseQueries:
         async with aiomysql.connect(**cls.CONNECTION_CONFIG) as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    f"SELECT departure_city_code, arrival_city_code FROM subscriptions "
+                    f"SELECT departure_city_code, arrival_airport_iata_code FROM subscriptions "
                     f"WHERE user_id = {user_id}"
                 )
                 result = await cursor.fetchall()

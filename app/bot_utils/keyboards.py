@@ -13,6 +13,8 @@ class KeyboardBuilder:
     def location_reply_keyboard() -> ReplyKeyboardMarkup:
         location_keyboard_buttons = [
             [
+                KeyboardButton(text=buttons.moscow, callback_data = "msk"),
+                KeyboardButton(text=buttons.spb, callback_data = "spb"),
                 KeyboardButton(text=buttons.location, request_location=True),
             ],
         ]
@@ -94,3 +96,11 @@ class KeyboardBuilder:
             [InlineKeyboardButton(text='Оставить отзыв 📝', callback_data="feedback")],
             [InlineKeyboardButton(text="Не хочу оставлять отзыв 🚫", callback_data="cancel_feedback")]])
         return feed_action_menuKB
+
+    @staticmethod
+    def start_city_keyboards():
+        start_city_menuKB = InlineKeyboardMarkup(row_width=1, inline_keyboard=[
+            [InlineKeyboardButton(text='Москва', callback_data="msk")],
+            [InlineKeyboardButton(text="Санкт-Петербург", callback_data="spb")],
+            [InlineKeyboardButton(text="Запрос геолокации",request_location=True,callback_data="geo")]])
+        return start_city_menuKB
