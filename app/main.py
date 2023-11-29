@@ -41,12 +41,20 @@ class FeedbackState(StatesGroup):
 
 
 async def set_commands(bot: Bot):
-    commands = [BotCommand(command='start1', description='Начать заново'),
+    commands = [BotCommand(command='start', description='Начать заново'),
                 BotCommand(command='feed', description='Обратная связь'),
-                BotCommand(command='subscriptions', description='Подписки'),
+                # BotCommand(command='subscription', description='Подписки'),
                 BotCommand(command='about', description='О боте')
                 ]
     await bot.set_my_commands(commands)
+
+@dp.message(StateFilter(None), CommandStart())
+async def command_start_handler(message: Message, state: FSMContext) -> None:
+    location_keyboard = KeyboardBuilder.location_reply_keyboard()
+    await message.answer(answers.start)
+    await message.answer(answers.city_or_location, reply_markup=location_keyboard)
+    await state.set_state(StartLocation.choosing_location)
+
 
 @dp.message(StateFilter(None), CommandStart())
 async def command_start_handler(message: Message, state: FSMContext) -> None:
@@ -66,7 +74,7 @@ async def location(message: Message, state: FSMContext) -> None:
     user_coords = (message.location.latitude, message.location.longitude)
     airport_name, city_code = await asyncio.create_task(
         AirportFinder.find_nearest_airport(user_coords)
-    )
+      )
 
     response_city_info = asyncio.create_task(
         AviasalesAPI.get_city_names_with_code(city_code)
@@ -83,7 +91,7 @@ async def location(message: Message, state: FSMContext) -> None:
     if len(count_airports) > 1:
         airports_list = []
         for name in count_airports:
-            airports_list.append(name[0])
+            airports_list.append(name[2])
         airports_text = ", ".join(airports_list)
         await message.answer(
             answers.location_many.format(
@@ -94,6 +102,7 @@ async def location(message: Message, state: FSMContext) -> None:
             ),
             reply_markup=KeyboardBuilder.main_reply_keyboard(),
         )
+
         await state.clear()
     else:
         await message.answer(
@@ -137,7 +146,9 @@ async def city_input(message: Message, state: FSMContext) -> None:
         count_airports = await asyncio.create_task(
             DatabaseQueries.count_airports_in_city_by_code(city_code)
         )
+        # print(count_airports)
         city_id = count_airports[0][3]
+        # print(city_id)
         await asyncio.create_task(
             DatabaseQueries.insert_new_user(user_id, username, chat_id, city_id)
         )
@@ -385,7 +396,9 @@ async def five_cheapest_handler(message: Message) -> None:
 @dp.callback_query(lambda callback: callback.data.split()[0] == "subscription")
 async def subscribe(callback: CallbackQuery) -> None:
     data = callback.data.split()
-    await DatabaseQueries.subscription(callback.from_user.id, data[1], data[2])
+    # print(data)
+    # print(callback.message.chat.id)
+    await DatabaseQueries.subscription(callback.message.chat.id, data[1], data[2])
     await callback.message.answer(answers.subscribe)
 
 

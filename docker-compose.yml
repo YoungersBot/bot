@@ -18,6 +18,6 @@ services:
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
     volumes:
-      - /app/db:/var/lib/mysql
+      - ./app/db:/var/lib/mysql
     env_file:
       - ./.env
