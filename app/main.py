@@ -10,7 +10,7 @@ from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import BotCommand, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 import weather_service
 from aviasales_api import AviasalesAPI
@@ -35,14 +35,14 @@ class FeedbackState(StatesGroup):
     waiting_for_feedback = State()
 
 
-async def set_commands(bot: Bot):
-    commands = [
-        BotCommand(command="start1", description="Начать заново"),
-        BotCommand(command="feed", description="Обратная связь"),
-        BotCommand(command="subscriptions", description="Подписки"),
-        BotCommand(command="about", description="О боте"),
-    ]
-    await bot.set_my_commands(commands)
+# async def set_commands(bot: Bot):
+#     commands = [
+#         BotCommand(command="start1", description="Начать заново"),
+#         BotCommand(command="feed", description="Обратная связь"),
+#         BotCommand(command="subscriptions", description="Подписки"),
+#         BotCommand(command="about", description="О боте"),
+#     ]
+#     await bot.set_my_commands(commands)
 
 
 @dp.message(StateFilter(None), CommandStart())
@@ -312,12 +312,14 @@ async def five_cheapest_handler(message: Message) -> None:
     for destination in result:
         ticket_url = destination.get("link", "")
         destination_city = await asyncio.create_task(DatabaseQueries.city_by_code(destination["destination"]))
+        if not destination_city:
+            continue
         data = f"subscription {origin} {destination['destination']}"
         reply_keyboard = KeyboardBuilder.ticket_reply_keyboard(ticket_url, data)
 
         weather_city = asyncio.create_task(WeatherApi.get_weather_with_coor(destination_city[1], destination_city[2]))
         result = await weather_city
-        parsed_result = WeatherApi.small_parse_response(result)
+        parsed_result = WeatherApi.small_parse_response(result) if result else ""
         answer_string = answers.you_can_fly.format(
             destination=destination_city[0],
             price=destination["price"],
@@ -396,12 +398,13 @@ async def cancel_handler(message: Message, state: FSMContext) -> None:
         return
     logging.info("Cancelling state %r", current_state)
     await state.clear()
+    await message.answer(reply_markup=KeyboardBuilder.main_reply_keyboard())
 
 
 async def main() -> None:
     bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
     dp.include_router(weather_service.router)
-    await set_commands(bot)
+    # await set_commands(bot)
     await dp.start_polling(bot)
 
 
