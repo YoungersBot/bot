@@ -1,9 +1,4 @@
-from aiogram.types import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    KeyboardButton,
-    ReplyKeyboardMarkup,
-)
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 
 from .buttons import buttons
 
@@ -23,17 +18,11 @@ class KeyboardBuilder:
         )
 
     @staticmethod
-    def location_two_cities_keyboard(
-        city_one: tuple, city_two: tuple
-    ) -> InlineKeyboardMarkup:
+    def location_two_cities_keyboard(city_one: tuple, city_two: tuple) -> InlineKeyboardMarkup:
         ticket_keyboard_buttons = [
             [
-                InlineKeyboardButton(
-                    text=f"{city_one[0]} ({city_one[2]})", callback_data=city_one[1]
-                ),
-                InlineKeyboardButton(
-                    text=f"{city_two[0]} ({city_two[2]})", callback_data=city_two[1]
-                ),
+                InlineKeyboardButton(text=f"{city_one[0]} ({city_one[2]})", callback_data=city_one[1]),
+                InlineKeyboardButton(text=f"{city_two[0]} ({city_two[2]})", callback_data=city_two[1]),
             ],
         ]
         return InlineKeyboardMarkup(inline_keyboard=ticket_keyboard_buttons)
@@ -90,7 +79,11 @@ class KeyboardBuilder:
 
     @staticmethod
     def feedback_keyboards():
-        feed_action_menuKB = InlineKeyboardMarkup(row_width=2, inline_keyboard=[
-            [InlineKeyboardButton(text='Оставить отзыв 📝', callback_data="feedback")],
-            [InlineKeyboardButton(text="Не хочу оставлять отзыв 🚫", callback_data="cancel_feedback")]])
+        feed_action_menuKB = InlineKeyboardMarkup(
+            row_width=2,
+            inline_keyboard=[
+                [InlineKeyboardButton(text="Оставить отзыв 📝", callback_data="feedback")],
+                [InlineKeyboardButton(text="Не хочу оставлять отзыв 🚫", callback_data="cancel_feedback")],
+            ],
+        )
         return feed_action_menuKB
