@@ -1,11 +1,11 @@
 import asyncio
 
-from aiogram import F, Router
+from aiogram import Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup
-from aviasales_api import AviasalesAPI
+from aiogram.types import Message
+
 from bot_utils.answers import answers
 from bot_utils.buttons import buttons
 from bot_utils.keyboards import KeyboardBuilder
@@ -32,9 +32,7 @@ async def weather_handler(message: Message) -> None:
 
 @router.message(lambda message: message.text == buttons.weather_in_your_city)
 async def your_city(message: Message):
-    users_city_coords = await asyncio.create_task(
-        DatabaseQueries.get_users_city(message.from_user.id)
-    )
+    users_city_coords = await asyncio.create_task(DatabaseQueries.get_users_city(message.from_user.id))
     weather_your_city = asyncio.create_task(
         WeatherApi.get_weather_with_coor(
             users_city_coords[1],
@@ -55,9 +53,7 @@ async def any_city(message: Message, state: FSMContext) -> None:
     await message.answer(answers.weather)
 
 
-@router.message(
-    WeatherState.any_city_state, lambda message: not message.text.isnumeric()
-)
+@router.message(WeatherState.any_city_state, lambda message: not message.text.isnumeric())
 async def weather_any_city(message: Message, state: FSMContext) -> None:
     weather_response = asyncio.create_task(WeatherApi.get_weather(message.text))
     result = await weather_response

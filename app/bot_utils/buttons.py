@@ -6,7 +6,7 @@ class ButtonsText:
     buy: str = "Купить"
     subscribe: str = "Подписаться"
     subscriptions: str = "Ваши подписки"
-    five_cheapest: str = "5 самых дешёвых билетов"
+    five_cheapest: str = "Самые дешёвые билеты"
     season: str = "Сезон"
     weather: str = "Погода"
     weather_in_your_city: str = "Погода в городе отправления"

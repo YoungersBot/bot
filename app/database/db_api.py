@@ -19,9 +19,7 @@ class DatabaseQueries:
     async def get_airports_coordinates(cls):
         async with aiomysql.connect(**cls.CONNECTION_CONFIG) as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute(
-                    "SELECT name_ru, city_code, lat, lon FROM airports"
-                )
+                await cursor.execute("SELECT name_ru, city_code, lat, lon FROM airports")
                 result = await cursor.fetchall()
                 await cursor.close()
                 return result
@@ -31,8 +29,7 @@ class DatabaseQueries:
         async with aiomysql.connect(**cls.CONNECTION_CONFIG) as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    f"SELECT city_code, country_id, name_ru, city_id FROM airports WHERE city_code = "
-                    f"'{city_code}'"
+                    f"SELECT city_code, country_id, name_ru, city_id FROM airports WHERE city_code = " f"'{city_code}'"
                 )
                 result = await cursor.fetchall()
                 await cursor.close()
@@ -69,14 +66,10 @@ class DatabaseQueries:
         async with aiomysql.connect(**cls.CONNECTION_CONFIG) as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    "INSERT INTO subscriptions"
-                    "(user_id, departure_city_code, arrival_city_code)"
-                    "values (%s,%s,%s)",
+                    "INSERT INTO subscriptions" "(user_id, departure_city_code, arrival_city_code)" "values (%s,%s,%s)",
                     (user_id, origin, destination),
                 )
-                await cursor.execute(
-                    f"UPDATE users SET subscription = 1 WHERE user_id = {user_id}"
-                )
+                await cursor.execute(f"UPDATE users SET subscription = 1 WHERE user_id = {user_id}")
                 await cursor.close()
 
     @classmethod
@@ -94,8 +87,7 @@ class DatabaseQueries:
         async with aiomysql.connect(**cls.CONNECTION_CONFIG) as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    f"SELECT departure_city_code, arrival_city_code FROM subscriptions "
-                    f"WHERE user_id = {user_id}"
+                    f"SELECT departure_city_code, arrival_city_code FROM subscriptions " f"WHERE user_id = {user_id}"
                 )
                 result = await cursor.fetchall()
                 await cursor.close()
@@ -131,9 +123,7 @@ class DatabaseQueries:
     async def city_by_code(cls, city_code):
         async with aiomysql.connect(**cls.CONNECTION_CONFIG) as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute(
-                    f"SELECT city_name_ru, lat, lon FROM cities WHERE city_code = '{city_code}'"
-                )
+                await cursor.execute(f"SELECT city_name_ru, lat, lon FROM cities WHERE city_code = '{city_code}'")
                 result = await cursor.fetchone()
                 await cursor.close()
                 return result
@@ -142,7 +132,6 @@ class DatabaseQueries:
 if __name__ == "__main__":
 
     async def check_result_coroutine():
-        code = "LED"
         test_task = await asyncio.create_task(DatabaseQueries.cities_where_the_season())
 
         print(test_task)
