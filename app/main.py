@@ -3,22 +3,21 @@ import logging
 import os
 import random
 import sys
-from typing import Optional
 
 from aiogram import Bot, Dispatcher, F
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
+from aiogram.types import CallbackQuery, Message
 
 import weather_service
 from aviasales_api import AviasalesAPI
 from bot_utils.answers import answers
 from bot_utils.buttons import buttons
 from bot_utils.keyboards import KeyboardBuilder
+from custom_ticket_service import custom_ticket_router
 from database.db_api import DatabaseQueries
-from destinations import dct, dst
 from find_airport import AirportFinder
 from weather_api import WeatherApi
 
@@ -52,6 +51,17 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
     await message.answer(answers.city_or_location, reply_markup=location_keyboard)
 
     await state.set_state(StartLocation.choosing_location)
+
+
+@dp.message(Command("cancel"))
+@dp.message(F.text.casefold() == "cancel")
+async def cancel_handler(message: Message, state: FSMContext) -> None:
+    current_state = await state.get_state()
+    if current_state is None:
+        return
+    logging.info("Cancelling state %r", current_state)
+    await state.clear()
+    await message.answer(text=answers.cancel, reply_markup=KeyboardBuilder.main_reply_keyboard())
 
 
 @dp.message(StartLocation.choosing_location, F.content_type == "location")
@@ -210,68 +220,6 @@ async def command_help_handler(message: Message) -> None:
     await message.answer(answers.help_command)
 
 
-class DestinationLimit(StatesGroup):
-    choosing_destination = State()
-    choosing_limit = State()
-
-
-@dp.message(StateFilter(None), Command("destination"))
-async def destination_choose_city(message: Message, state: FSMContext):
-    kb = [
-        [
-            InlineKeyboardButton(text=dst.led, callback_data="LED"),
-            InlineKeyboardButton(text=dst.aer, callback_data="AER"),
-            InlineKeyboardButton(text=dst.kzn, callback_data="KZN"),
-        ],
-    ]
-    destination_kb = InlineKeyboardMarkup(inline_keyboard=kb)
-    await message.answer(text=answers.destination, reply_markup=destination_kb)
-    await state.set_state(DestinationLimit.choosing_destination)
-
-
-@dp.callback_query(
-    DestinationLimit.choosing_destination,
-    lambda callback: callback.data in ["LED", "AER", "KZN"],
-)
-async def choose_destination(callback: CallbackQuery, state: FSMContext):
-    await state.update_data(destination=callback.data)
-    await callback.message.answer(text=answers.limit)
-    await state.set_state(DestinationLimit.choosing_limit)
-
-
-@dp.message(
-    DestinationLimit.choosing_limit,
-    lambda message: message.text.isdecimal() and int(message.text) < 10,
-)
-async def choose_limit(message: Message, state: FSMContext) -> Optional[Message]:
-    await state.update_data(limit=message.text)
-    user_data = await state.get_data()
-
-    url = AviasalesAPI.create_default_request_url(user_data["destination"], user_data["limit"])
-    task_one_city = asyncio.create_task(AviasalesAPI.get_one_city_price(request_url=url))
-    result = await task_one_city
-    await message.answer(answers.cheapest)
-
-    if not result:
-        await state.clear()
-        return await message.answer(answers.no_tickets)
-
-    for destination in result:
-        ticket_url = destination["link"]
-        reply_keyboard = KeyboardBuilder.ticket_reply_keyboard(ticket_url)
-        destination_string = answers.you_can_fly.format(
-            destination=dct[destination["destination"]], price=destination["price"]
-        )
-        await message.answer(destination_string, reply_markup=reply_keyboard)
-
-    await state.clear()
-
-
-@dp.message(DestinationLimit.choosing_limit)
-async def wrong_limit(message: Message):
-    await message.answer(text=answers.wrong_limit)
-
-
 @dp.message(lambda message: message.text == buttons.subscriptions)
 async def show_subscriptions(message: Message):
     user_id = message.chat.id
@@ -293,7 +241,7 @@ async def show_subscriptions(message: Message):
 async def unsubscribe(callback: CallbackQuery) -> None:
     data = callback.data.split()
     await DatabaseQueries.unsubscription(callback.from_user.id, data[1], data[2])
-    await callback.message.answer(answers.unsubscription)
+    await callback.message.answer(answers.unsubscribe)
     await show_subscriptions(callback.message)
 
 
@@ -332,7 +280,8 @@ async def five_cheapest_handler(message: Message) -> None:
 @dp.callback_query(lambda callback: callback.data.split()[0] == "subscription")
 async def subscribe(callback: CallbackQuery) -> None:
     data = callback.data.split()
-    await DatabaseQueries.subscription(callback.from_user.id, data[1], data[2])
+    data.pop(0)
+    await DatabaseQueries.subscription(callback.from_user.id, *data)
     await callback.message.answer(answers.subscribe)
 
 
@@ -390,20 +339,9 @@ async def season_handler(message: Message) -> None:
         await message.answer(answer_string, reply_markup=reply_keyboard)
 
 
-@dp.message(Command("cancel"))
-@dp.message(F.text.casefold() == "cancel")
-async def cancel_handler(message: Message, state: FSMContext) -> None:
-    current_state = await state.get_state()
-    if current_state is None:
-        return
-    logging.info("Cancelling state %r", current_state)
-    await state.clear()
-    await message.answer(reply_markup=KeyboardBuilder.main_reply_keyboard())
-
-
 async def main() -> None:
     bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
-    dp.include_router(weather_service.router)
+    dp.include_routers(weather_service.router, custom_ticket_router)
     # await set_commands(bot)
     await dp.start_polling(bot)
 

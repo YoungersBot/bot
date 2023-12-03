@@ -62,12 +62,18 @@ class DatabaseQueries:
                 await cursor.close()
 
     @classmethod
-    async def subscription(cls, user_id, origin, destination):
+    async def subscription(
+        cls, user_id: int, origin: str, destination: str, departure_date: str = None, return_date: str = None
+    ) -> None:
         async with aiomysql.connect(**cls.CONNECTION_CONFIG) as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    "INSERT INTO subscriptions" "(user_id, departure_city_code, arrival_city_code)" "values (%s,%s,%s)",
-                    (user_id, origin, destination),
+                    """
+                    INSERT INTO subscriptions
+                    (user_id, departure_city_code, arrival_city_code, departure_date, return_date)
+                    values (%s,%s,%s,%s,%s)
+                    """,
+                    (user_id, origin, destination, departure_date, return_date),
                 )
                 await cursor.execute(f"UPDATE users SET subscription = 1 WHERE user_id = {user_id}")
                 await cursor.close()

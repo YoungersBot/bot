@@ -8,16 +8,14 @@ class Answers:
     subscribe: str = "Вы успешно подписаны!"
     no_tickets: str = "Нет билетов по заданному направлению."
 
-    destination: str = "Выберите направление: "
-    limit: str = "Сколько результатов поиска показать?\n От 1 до 10."
-    wrong_limit: str = "Введите число от 1 до 10"
-
     start: str = "Здравствуйте, {username}"
+    cancel: str = "Действие отменено."
+    help_command: str = "Когда-нибудь здесь будет описание работы бота"
+
     city_or_location: str = (
         "Напишите название города из которого Вы хотели бы вылетать или предоставьте доступ к "
         "геолокации и мы найдём ближайший аэропорт."
     )
-    help_command: str = "Когда-нибудь здесь будет описание работы бота"
 
     location: str = "Ближайший к Вам аэропорт - {airport} в {in_city} ({country})."
     location_many: str = (
@@ -41,8 +39,18 @@ class Answers:
 
     subscriptions = "Ваши подписки:\n"
     subscription = "Из города {origin} в город {arrival}"
-    unsubscription = "Подписка отменена"
+    unsubscribe = "Подписка отменена"
     no_subscriptions = "У вас нет подписок"
+
+    custom_ticket_main: str = "Настройте параметры"
+    custom_ticket_set_city: str = "\U0001F5FA {city}, {country}"
+    custom_ticket_select_city: str = (
+        "Напишите название города или предоставьте доступ к геолокации мы найдём ближайший аэропорт."
+    )
+    custom_ticket_select_date: str = "Введите дату в формате\n " "ГГГГ-ММ-ДД \n" "например 2025-11-25"
+    custom_ticket_wrong_date: str = "Дата введена не правильно."
+    custom_ticket_confirm: str = "Билеты по выбранным параметрам:"
+    custom_ticket_reject: str = "Выбор билета по параметром отменен."
 
 
 answers = Answers()

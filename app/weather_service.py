@@ -72,12 +72,3 @@ async def weather_any_city(message: Message, state: FSMContext) -> None:
 @router.message(WeatherState.any_city_state)
 async def weather_wrong_city(message: Message) -> None:
     await message.reply(answers.weather_wrong_city.format(city=message.text))
-
-
-@router.message()
-async def echo_handler(message: Message) -> None:
-    main_keyboard = KeyboardBuilder.main_reply_keyboard()
-    try:
-        await message.send_copy(chat_id=message.chat.id, reply_markup=main_keyboard)
-    except TypeError:
-        await message.answer("Nice try!")

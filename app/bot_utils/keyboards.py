@@ -1,6 +1,24 @@
+from dataclasses import dataclass
+
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 
-from .buttons import buttons
+from .buttons import ConfirmRejectText, DefaultCustomTicketText, SelectedCustomTicketText, buttons
+
+
+@dataclass
+class CustomTicketButtons:
+    departure_city = InlineKeyboardButton(text=DefaultCustomTicketText.origin_city, callback_data="origin_city")
+    destination_city = InlineKeyboardButton(
+        text=DefaultCustomTicketText.destination_city, callback_data="destination_city"
+    )
+    departure_date = InlineKeyboardButton(text=DefaultCustomTicketText.departure_date, callback_data="departure_date")
+    return_date = InlineKeyboardButton(text=DefaultCustomTicketText.return_date, callback_data="return_date")
+
+
+@dataclass
+class ConfirmRejectButtons:
+    confirm = InlineKeyboardButton(text=ConfirmRejectText.confirm, callback_data="confirm")
+    reject = InlineKeyboardButton(text=ConfirmRejectText.reject, callback_data="reject")
 
 
 class KeyboardBuilder:
@@ -35,6 +53,7 @@ class KeyboardBuilder:
                 KeyboardButton(text=buttons.five_cheapest),
                 KeyboardButton(text=buttons.weather),
                 KeyboardButton(text=buttons.season),
+                KeyboardButton(text=buttons.custom_ticket),
             ],
         ]
         return ReplyKeyboardMarkup(
@@ -87,3 +106,53 @@ class KeyboardBuilder:
             ],
         )
         return feed_action_menuKB
+
+    @staticmethod
+    def custom_ticket_keyboard(
+        origin_city: str = None,
+        destination_city: str = None,
+        departure_date: str = None,
+        return_date: str = None,
+        ready_to_search: bool = False,
+    ):
+        custom_ticket_buttons = CustomTicketButtons()
+
+        if origin_city:
+            custom_ticket_buttons.departure_city.text = SelectedCustomTicketText.origin_city.format(
+                origin_city=origin_city
+            )
+        if destination_city:
+            custom_ticket_buttons.destination_city.text = SelectedCustomTicketText.destination_city.format(
+                destination_city=destination_city
+            )
+        if departure_date:
+            custom_ticket_buttons.departure_date.text = SelectedCustomTicketText.departure_date.format(
+                departure_date=departure_date
+            )
+        if return_date:
+            custom_ticket_buttons.return_date.text = SelectedCustomTicketText.return_date.format(
+                return_date=return_date
+            )
+
+        keyboard_buttons = [
+            custom_ticket_buttons.departure_city,
+            custom_ticket_buttons.destination_city,
+            custom_ticket_buttons.departure_date,
+            custom_ticket_buttons.return_date,
+        ]
+        keyboard = [[button] for button in keyboard_buttons]
+
+        if ready_to_search:
+            confirm_reject_row = [ConfirmRejectButtons.reject, ConfirmRejectButtons.confirm]
+            keyboard.append(confirm_reject_row)
+        else:
+            keyboard.append([ConfirmRejectButtons.reject])
+
+        return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+    @staticmethod
+    def reset_custom_ticket_buttons():
+        CustomTicketButtons.departure_city.text = DefaultCustomTicketText.origin_city
+        CustomTicketButtons.destination_city.text = DefaultCustomTicketText.destination_city
+        CustomTicketButtons.departure_date.text = DefaultCustomTicketText.departure_date
+        CustomTicketButtons.return_date.text = DefaultCustomTicketText.return_date
