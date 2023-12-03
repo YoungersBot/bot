@@ -150,7 +150,6 @@ class TicketResponse:
                 continue
 
             data = f"subscription {origin_code} {ticket['destination']} {departure_date} {return_date}"
-            print(data)
             reply_keyboard = KeyboardBuilder.ticket_reply_keyboard(ticket_url, data)
 
             weather_city = asyncio.create_task(
@@ -165,23 +164,3 @@ class TicketResponse:
                 weather=parsed_weather_result,
             )
             await message.answer(answer_text, reply_markup=reply_keyboard)
-
-
-if __name__ == "__main__":
-
-    async def check_result_coroutine():
-        state_d = {
-            "origin": "TBS",  # {'city_code': 'TBS', 'city_name': 'Тбилиси', 'country': 'Грузия'},
-            "destination": "MOW",  # {'city_code': 'MOW', 'city_name': 'Москва', 'country': 'Россия'},
-            "departure_date": "2023-12-15",
-            "return_date": "2023-12-30",
-        }
-
-        req = TicketRequestData(**state_d)
-        url = AviasalesAPI.create_custom_request_url(**asdict(req))
-        task = asyncio.create_task(AviasalesAPI.get_one_city_price(url))
-        res = await task
-        print(res)
-
-    state_m = "origin_city"
-    print(state_m[:-5])
